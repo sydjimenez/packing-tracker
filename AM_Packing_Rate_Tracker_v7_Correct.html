@@ -1,0 +1,599 @@
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,#2a1200 0%,#5c2d0a 100%);min-height:600px;color:#1a1a1a}
+header{background:linear-gradient(90deg,#2a1200,#4a1f05);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #7B4A1E;flex-wrap:wrap;gap:8px}
+header h1{font-size:17px;font-weight:700;color:#F5E6D0}
+.sub{font-size:11px;background:rgba(193,127,62,.25);padding:3px 10px;border-radius:20px;color:#F5C98A;border:1px solid #7B4A1E}
+.ld{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;animation:pulse 2s infinite;margin-right:4px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.container{max-width:1260px;margin:0 auto;padding:16px}
+.sync-bar{display:flex;align-items:center;gap:8px;font-size:11px;color:#F5C98A;padding:6px 12px;background:rgba(42,18,0,.5);border-radius:8px;border:1px solid #7B4A1E;margin-bottom:12px}
+.nav{display:flex;gap:3px;background:rgba(42,18,0,.5);border-radius:14px;padding:4px;margin-bottom:16px;width:fit-content;border:1px solid #7B4A1E;flex-wrap:wrap}
+.nav-btn{padding:7px 16px;border:none;background:transparent;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;color:rgba(245,230,208,.6);transition:all .2s}
+.nav-btn.active{background:linear-gradient(135deg,#7B4A1E,#C17F3E);color:#fff;box-shadow:0 2px 10px rgba(123,74,30,.5)}
+.nav-btn:hover:not(.active){background:rgba(193,127,62,.2);color:#F5E6D0}
+.seg{display:flex;gap:2px;background:#E8D5BC;border-radius:10px;padding:3px;width:fit-content}
+.seg-btn{padding:6px 14px;border:none;background:transparent;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:#6B4020;transition:all .2s}
+.seg-btn.active{background:linear-gradient(135deg,#7B4A1E,#C17F3E);color:#fff}
+.seg-btn:hover:not(.active){background:#D4B896;color:#3D1C02}
+.card{background:#fff;border-radius:14px;padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(61,28,2,.1),0 4px 16px rgba(61,28,2,.12);border:1px solid #E8D5BC}
+.card-title{font-size:13px;font-weight:700;margin-bottom:12px;color:#3D1C02}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stat-card{background:linear-gradient(135deg,#fff,#FDF5EC);border:1px solid #E8D5BC;border-radius:12px;padding:14px;text-align:center}
+.stat-card .val{font-size:26px;font-weight:800;background:linear-gradient(135deg,#7B4A1E,#C17F3E);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-card .lbl{font-size:10px;color:#8B6040;margin-top:3px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.perf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:7px 9px;text-align:left;background:#FDF0E0;color:#5C2D0A;font-weight:700;border-bottom:2px solid #E8D5BC;white-space:nowrap;text-transform:uppercase;font-size:10px;letter-spacing:.2px}
+td{padding:6px 9px;border-bottom:1px solid #F5EDE0;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FDFAF5}
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600}
+.badge-blue{background:#FDE8C8;color:#7B4A1E}
+.badge-green{background:#dcfce7;color:#15803d}
+.badge-yellow{background:#fef9c3;color:#a16207}
+button{font-size:12px;padding:6px 13px;border-radius:8px;border:none;cursor:pointer;font-weight:600;transition:all .15s}
+button:disabled{opacity:.38;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,#7B4A1E,#C17F3E);color:#fff}
+.btn-success{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff}
+.btn-danger{background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;padding:3px 7px;font-size:11px}
+.btn-danger:hover{background:#dc2626;color:#fff}
+.btn-gray{background:#F5EDE0;color:#5C2D0A;border:1px solid #E8D5BC}
+.btn-gray:hover{background:#E8D5BC}
+.btn-move{background:#FDE8C8;color:#7B4A1E;border:1px solid #C17F3E;font-size:11px;padding:3px 7px}
+.btn-move:hover{background:#7B4A1E;color:#fff}
+.controls{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+select,input[type=text],input[type=number]{font-size:12px;padding:6px 9px;border:1.5px solid #E8D5BC;border-radius:8px;background:#fff;font-weight:500;color:#3D1C02}
+select:focus,input:focus{outline:none;border-color:#C17F3E}
+.editable{cursor:text;border-bottom:1px dashed #C17F3E;min-width:28px;display:inline-block;border-radius:3px;padding:2px 3px}
+.editable:focus{outline:2px solid #C17F3E;border-radius:4px;border-bottom:none;background:#FDF5EC}
+.legend{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;padding:7px 10px;background:#FDF5EC;border-radius:8px;border:1px solid #E8D5BC}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:#5C2D0A;font-weight:500}
+.legend-dot{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.1);flex-shrink:0}
+.empty-state{text-align:center;padding:28px;color:#C4A882;font-size:12px}
+.scroll-x{overflow-x:auto}
+.summary-wrap{overflow-x:auto;border-radius:9px;border:1px solid #E8D5BC}
+.toast{position:fixed;bottom:18px;right:18px;background:linear-gradient(135deg,#7B4A1E,#C17F3E);color:#fff;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:600;z-index:999;box-shadow:0 4px 14px rgba(61,28,2,.35)}
+.rank{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:50%;font-size:10px;font-weight:700;margin-right:4px}
+.rank-1{background:#ffd700;color:#7c5a00}.rank-2{background:#c0c0c0;color:#444}.rank-3{background:#cd7f32;color:#fff}.rank-n{background:#E8D5BC;color:#7B4A1E}
+input[type=file]{display:none}
+.info-box{font-size:11px;padding:8px 11px;border-radius:8px;margin-bottom:10px;line-height:1.5}
+.info-brown{background:#FDE8C8;border:1px solid #C17F3E;color:#5C2D0A}
+.info-green{background:#dcfce7;border:1px solid #86efac;color:#166534;border-radius:10px;padding:14px}
+</style>
+
+<div style="background:linear-gradient(135deg,#2a1200 0%,#5c2d0a 100%);min-height:600px">
+<header>
+  <h1>📦 AM Packing Rate Tracker</h1>
+  <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+    <span class="sub" id="header-months">April · May 2026</span>
+    <span style="font-size:11px;color:#86efac;display:flex;align-items:center"><span class="ld"></span>LIVE</span>
+    <button onclick="openMonthModal()" style="font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid #7B4A1E;background:rgba(193,127,62,.2);color:#F5C98A;cursor:pointer;font-weight:600">＋ Month</button>
+  </div>
+</header>
+
+<div id="month-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center" onclick="if(event.target===this)closeMonthModal()">
+  <div style="background:#fff;border-radius:16px;padding:22px;width:340px;box-shadow:0 20px 60px rgba(61,28,2,.4);border:2px solid #E8D5BC">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h2 style="font-size:14px;font-weight:700;color:#3D1C02">📅 Manage Months</h2>
+      <button onclick="closeMonthModal()" style="background:#F5EDE0;border:none;border-radius:7px;padding:3px 8px;cursor:pointer;color:#7B4A1E">✕</button>
+    </div>
+    <div id="month-list" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px"></div>
+    <hr style="border:none;border-top:1px solid #E8D5BC;margin-bottom:12px"/>
+    <p style="font-size:11px;color:#7B4A1E;margin-bottom:8px;background:#FDF0E0;border-radius:6px;padding:6px 9px;border:1px solid #E8D5BC">📅 <strong>Sun–Fri only</strong> (no Saturdays)</p>
+    <div style="display:flex;gap:6px;margin-bottom:5px">
+      <select id="new-month-sel" style="flex:1"><option value="">Month…</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select>
+      <select id="new-year-sel" style="width:76px"><option>2025</option><option selected>2026</option><option>2027</option></select>
+    </div>
+    <p id="month-modal-info" style="font-size:11px;color:#94a3b8;margin-bottom:10px">All Sun–Fri dates will be added.</p>
+    <button onclick="confirmAddMonth()" style="width:100%;background:linear-gradient(135deg,#7B4A1E,#C17F3E);color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;font-weight:600;cursor:pointer">Add Month</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="sync-bar">
+    <span class="ld"></span>
+    <span id="sync-status">Live · Changes sync instantly to everyone</span>
+    <span style="margin-left:auto;cursor:pointer;color:#F5C98A;font-weight:600" onclick="forceSync()">↻ Refresh</span>
+  </div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="showTab('dashboard')">📊 Dashboard</button>
+    <button class="nav-btn" onclick="showTab('daily')">📅 Daily Entry</button>
+    <button class="nav-btn" onclick="showTab('summary')">📋 Summary</button>
+    <button class="nav-btn" onclick="showTab('quick')">⚡ Quick Add</button>
+    <button class="nav-btn" onclick="showTab('import')">📥 Import XLSX</button>
+  </div>
+  <div id="tab-dashboard"></div>
+  <div id="tab-daily" style="display:none"></div>
+  <div id="tab-summary" style="display:none"></div>
+  <div id="tab-quick" style="display:none"></div>
+  <div id="tab-import" style="display:none"></div>
+</div>
+</div>
+
+<script>
+function isSat(k){const[m,d,y]=k.split('.').map(Number);return new Date(2000+y,m-1,d).getDay()===6;}
+function genMonth(label){const[mon,yr]=label.split(' ');const mi=['January','February','March','April','May','June','July','August','September','October','November','December'];const mI=mi.indexOf(mon),year=Number(yr),days=new Date(year,mI+1,0).getDate(),out={};for(let d=1;d<=days;d++){if(new Date(year,mI,d).getDay()===6)continue;out[`${mI+1}.${d}.${String(yr).slice(2)}`]={midDay:[],fullDay:[],dayNote:''};}return out;}
+// r(empId, name, time, transactions, tph)
+function r(id,n,t,tx,tp){return{transactionType:906,description:"Print Manifest Label",employeeId:id,name:n,time:t||0,pieces:0,pph:0,transactions:tx,tph:tp||720,note:""};}
+
+const SEED={
+"April 2026":{
+"4.1.26":{midDay:[],fullDay:[],dayNote:""},"4.2.26":{midDay:[],fullDay:[],dayNote:""},"4.3.26":{midDay:[],fullDay:[],dayNote:""},"4.5.26":{midDay:[],fullDay:[],dayNote:""},"4.6.26":{midDay:[],fullDay:[],dayNote:""},"4.7.26":{midDay:[],fullDay:[],dayNote:""},"4.8.26":{midDay:[],fullDay:[],dayNote:""},
+"4.9.26":{midDay:[r(42173,"Alex Nava",295,59),r(40825,"Cristina Roman",320,64),r(42190,"Darren Ferguson",320,64),r(42169,"Jacquelin Acosta",370,74),r(40543,"Mai Guerrero",355,71),r(40808,"Mayra Alvarez",410,82),r(42069,"Thomas Segura",365,73),r(42191,"Yesenia Pacheco",475,95),r(42241,"Christian Suanes",230,46),r(42175,"Denissol Padilla",340,68),r(40928,"Elvira Rodriguez",275,55),r(40909,"Marco Hernandez Pantoja",145,29)],fullDay:[r(42173,"Alex Nava",520,104),r(40825,"Cristina Roman",625,125),r(42190,"Darren Ferguson",510,102),r(42169,"Jacquelin Acosta",660,132),r(40543,"Mai Guerrero",725,145),r(40808,"Mayra Alvarez",420,84),r(42069,"Thomas Segura",630,126),r(42191,"Yesenia Pacheco",795,159)],dayNote:""},
+"4.10.26":{midDay:[r(40825,"Cristina Roman",190,38),r(40909,"Marco Hernandez Pantoja",190,35),r(41002,"Khi Crawford",350,60),r(42069,"Thomas Segura",370,72),r(42169,"Jacquelin Acosta",410,79),r(42173,"Alex Nava",255,51),r(42190,"Darren Ferguson",335,63),r(42191,"Yesenia Pacheco",595,116),r(40928,"Elvira Rodriguez",130,26)],fullDay:[r(40825,"Cristina Roman",430,86),r(40909,"Marco Hernandez Pantoja",440,88),r(41002,"Khi Crawford",660,132),r(42069,"Thomas Segura",645,129),r(42169,"Jacquelin Acosta",735,147),r(42173,"Alex Nava",365,73),r(42190,"Darren Ferguson",605,121),r(42191,"Yesenia Pacheco",870,174)],dayNote:""},
+"4.12.26":{midDay:[],fullDay:[r(42241,"Christian Suanes",825,165)],dayNote:""},
+"4.13.26":{midDay:[r(42173,"Alex Nava",530,101),r(42241,"Christian Suanes",385,70),r(40825,"Cristina Roman",470,82),r(42190,"Darren Ferguson",420,77),r(42169,"Jacquelin Acosta",350,66),r(40543,"Mai Guerrero",455,81),r(40808,"Mayra Alvarez",335,67),r(42069,"Thomas Segura",290,50),r(42191,"Yesenia Pacheco",370,68),r(40955,"Savannah Gabriel",165,33),r(42052,"Keilani Sossamon",275,55),r(40909,"Marco Hernandez Pantoja",270,54),r(40933,"Blendon Holtzer",365,73)],fullDay:[r(42173,"Alex Nava",820,164),r(40825,"Cristina Roman",740,148),r(42169,"Jacquelin Acosta",675,135),r(40543,"Mai Guerrero",795,159),r(42069,"Thomas Segura",490,98),r(42191,"Yesenia Pacheco",660,132),r(42190,"Darren Ferguson",665,133),r(42241,"Christian Suanes",670,134)],dayNote:""},
+"4.14.26":{midDay:[r(40808,"Mayra Alvarez",425,78),r(40825,"Cristina Roman",200,40),r(41002,"Khi Crawford",445,75),r(42052,"Keilani Sossamon",410,82),r(42069,"Thomas Segura",325,57),r(42175,"Denissol Padilla",365,61),r(42190,"Darren Ferguson",355,59),r(42191,"Yesenia Pacheco",530,91),r(42241,"Christian Suanes",420,84),r(40909,"Marco Hernandez Pantoja",385,77),r(42169,"Jacquelin Acosta",410,82),r(42173,"Alex Nava",150,30)],fullDay:[r(40808,"Mayra Alvarez",645,129),r(41002,"Khi Crawford",670,134),r(42069,"Thomas Segura",605,121),r(42175,"Denissol Padilla",610,122),r(42190,"Darren Ferguson",535,107),r(42191,"Yesenia Pacheco",775,155)],dayNote:""},
+"4.15.26":{midDay:[r(40543,"Mai Guerrero",320,64),r(40808,"Mayra Alvarez",425,85),r(40825,"Cristina Roman",375,75),r(40909,"Marco Hernandez Pantoja",440,88),r(42069,"Thomas Segura",290,58),r(42175,"Denissol Padilla",400,80),r(42190,"Darren Ferguson",255,51),r(42241,"Christian Suanes",365,73)],fullDay:[r(40543,"Mai Guerrero",580,116),r(40808,"Mayra Alvarez",785,157),r(40825,"Cristina Roman",765,153),r(40909,"Marco Hernandez Pantoja",760,152),r(40933,"Blendon Holtzer",315,63),r(42069,"Thomas Segura",515,103),r(42169,"Jacquelin Acosta",335,67),r(42175,"Denissol Padilla",755,151),r(42190,"Darren Ferguson",540,108),r(42241,"Christian Suanes",665,133)],dayNote:""},
+"4.16.26":{midDay:[r(40808,"Mayra Alvarez",440,88),r(40825,"Cristina Roman",330,66),r(40909,"Marco Hernandez Pantoja",175,35),r(41002,"Khi Crawford",225,45),r(42069,"Thomas Segura",305,61),r(42175,"Denissol Padilla",260,52),r(42190,"Darren Ferguson",265,53),r(42241,"Christian Suanes",335,67),r(42052,"Keilani Sossamon",50,10),r(42169,"Jacquelin Acosta",220,44),r(42191,"Yesenia Pacheco",295,59)],fullDay:[r(40808,"Mayra Alvarez",800,160),r(40825,"Cristina Roman",745,149),r(40909,"Marco Hernandez Pantoja",520,104),r(41002,"Khi Crawford",590,118),r(42069,"Thomas Segura",665,133),r(42175,"Denissol Padilla",530,106),r(42190,"Darren Ferguson",555,111),r(42241,"Christian Suanes",740,148)],dayNote:""},
+"4.17.26":{midDay:[r(40808,"Mayra Alvarez",275,55),r(40825,"Cristina Roman",265,53),r(40909,"Marco Hernandez Pantoja",315,63),r(40955,"Savannah Gabriel",395,79),r(42052,"Keilani Sossamon",385,77),r(42069,"Thomas Segura",265,53),r(42175,"Denissol Padilla",325,65),r(42190,"Darren Ferguson",255,51),r(42191,"Yesenia Pacheco",275,55),r(40928,"Elvira Rodriguez",230,46),r(42169,"Jacquelin Acosta",205,41)],fullDay:[r(40808,"Mayra Alvarez",585,117),r(40825,"Cristina Roman",695,139),r(40909,"Marco Hernandez Pantoja",530,106),r(42069,"Thomas Segura",570,114),r(42175,"Denissol Padilla",605,121),r(42190,"Darren Ferguson",630,126),r(42191,"Yesenia Pacheco",525,105)],dayNote:""},
+"4.19.26":{midDay:[r(40909,"Marco Hernandez Pantoja",255,51),r(40933,"Blendon Holtzer",160,32)],fullDay:[r(42241,"Christian Suanes",600,120)],dayNote:""},
+"4.20.26":{midDay:[r(40610,"Amie Montani",170,34),r(40808,"Mayra Alvarez",375,75),r(40825,"Cristina Roman",315,63),r(42052,"Keilani Sossamon",330,66),r(42069,"Thomas Segura",30,6),r(42169,"Jacquelin Acosta",390,78),r(42173,"Alex Nava",180,36),r(42175,"Denissol Padilla",250,50),r(42190,"Darren Ferguson",255,51),r(42191,"Yesenia Pacheco",410,82),r(42241,"Christian Suanes",360,72),r(40928,"Elvira Rodriguez",265,53),r(40955,"Savannah Gabriel",345,69)],fullDay:[r(40808,"Mayra Alvarez",650,130),r(40825,"Cristina Roman",600,120),r(42052,"Keilani Sossamon",625,125),r(42169,"Jacquelin Acosta",750,150),r(42190,"Darren Ferguson",480,96),r(42191,"Yesenia Pacheco",785,157),r(42241,"Christian Suanes",630,126)],dayNote:""},
+"4.21.26":{midDay:[r(40808,"Mayra Alvarez",355,71),r(40825,"Cristina Roman",430,86),r(40909,"Marco Hernandez Pantoja",335,67),r(42069,"Thomas Segura",280,56),r(42169,"Jacquelin Acosta",295,59),r(42190,"Darren Ferguson",310,62),r(42191,"Yesenia Pacheco",375,75),r(70027,"Mayra Lopez",355,71),r(42241,"Christian Suanes",285,57),r(40928,"Elvira Rodriguez",265,53)],fullDay:[r(40808,"Mayra Alvarez",740,148),r(40825,"Cristina Roman",590,118),r(40909,"Marco Hernandez Pantoja",520,104),r(42069,"Thomas Segura",525,105),r(42169,"Jacquelin Acosta",585,117),r(42190,"Darren Ferguson",575,115),r(42191,"Yesenia Pacheco",715,143),r(70027,"Mayra Lopez",625,125)],dayNote:""},
+"4.22.26":{midDay:[r(40808,"Mayra Alvarez",380,76),r(40825,"Cristina Roman",430,86),r(42069,"Thomas Segura",390,78),r(42190,"Darren Ferguson",285,57),r(42191,"Yesenia Pacheco",435,87),r(42241,"Christian Suanes",330,66),r(40543,"Mai Guerrero",105,21),r(40610,"Amie Montani",40,8),r(40850,"Maria Chavez",105,21),r(40909,"Marco Hernandez Pantoja",30,6),r(40928,"Elvira Rodriguez",270,54),r(40955,"Savannah Gabriel",85,17),r(40989,"Guillermo Gracian",30,6),r(42052,"Keilani Sossamon",25,5),r(42169,"Jacquelin Acosta",435,87),r(42173,"Alex Nava",125,25)],fullDay:[r(40808,"Mayra Alvarez",650,130),r(40825,"Cristina Roman",855,171),r(42069,"Thomas Segura",670,134),r(42190,"Darren Ferguson",725,145),r(42191,"Yesenia Pacheco",710,142),r(42241,"Christian Suanes",600,120)],dayNote:""},
+"4.23.26":{midDay:[r(42169,"Jacquelin Acosta",265,53),r(42191,"Yesenia Pacheco",440,88),r(40808,"Mayra Alvarez",355,71),r(40825,"Cristina Roman",470,94),r(42069,"Thomas Segura",335,67),r(42173,"Alex Nava",345,69),r(42190,"Darren Ferguson",375,75),r(42241,"Christian Suanes",185,37)],fullDay:[r(40808,"Mayra Alvarez",695,139),r(40825,"Cristina Roman",935,187),r(42069,"Thomas Segura",680,136),r(42173,"Alex Nava",540,108),r(42190,"Darren Ferguson",680,136),r(42241,"Christian Suanes",645,129)],dayNote:""},
+"4.24.26":{midDay:[r(40808,"Mayra Alvarez",485,97),r(40825,"Cristina Roman",500,100),r(40909,"Marco Hernandez Pantoja",285,57),r(42069,"Thomas Segura",395,79),r(42190,"Darren Ferguson",320,64),r(70027,"Mayra Lopez",505,101),r(42191,"Yesenia Pacheco",335,67)],fullDay:[r(40808,"Mayra Alvarez",890,178),r(40825,"Cristina Roman",930,186),r(40909,"Marco Hernandez Pantoja",565,113),r(42069,"Thomas Segura",765,153),r(42190,"Darren Ferguson",565,113),r(70027,"Mayra Lopez",860,172)],dayNote:""},
+"4.26.26":{midDay:[r(40909,"Marco Hernandez Pantoja",455,91)],fullDay:[r(42241,"Christian Suanes",700,140)],dayNote:""},
+"4.27.26":{midDay:[r(40808,"Mayra Alvarez",400,80),r(40825,"Cristina Roman",405,81),r(40972,"Marisela Lopez",305,61),r(41002,"Khi Crawford",330,66),r(42069,"Thomas Segura",350,70),r(42169,"Jacquelin Acosta",340,68),r(42173,"Alex Nava",255,51),r(42190,"Darren Ferguson",300,60),r(42241,"Christian Suanes",325,65),r(70027,"Mayra Lopez",525,105),r(40543,"Mai Guerrero",255,51),r(40909,"Marco Hernandez Pantoja",305,61),r(40928,"Elvira Rodriguez",75,15),r(42052,"Keilani Sossamon",260,52)],fullDay:[r(40808,"Mayra Alvarez",825,165),r(40825,"Cristina Roman",775,155),r(41002,"Khi Crawford",620,124),r(42069,"Thomas Segura",680,136),r(42169,"Jacquelin Acosta",695,139),r(42173,"Alex Nava",575,115),r(42190,"Darren Ferguson",605,121),r(42241,"Christian Suanes",590,118),r(70027,"Mayra Lopez",925,185)],dayNote:""},
+"4.28.26":{midDay:[r(40808,"Mayra Alvarez",325,65),r(40825,"Cristina Roman",445,89),r(41002,"Khi Crawford",420,84),r(42069,"Thomas Segura",385,77),r(42190,"Darren Ferguson",355,71),r(42191,"Yesenia Pacheco",395,79),r(42241,"Christian Suanes",355,71),r(70027,"Mayra Lopez",485,97)],fullDay:[],dayNote:""},
+"4.29.26":{midDay:[r(40808,"Mayra Alvarez",425,85),r(40909,"Marco Hernandez Pantoja",305,61),r(41002,"Khi Crawford",435,87),r(42069,"Thomas Segura",385,77),r(42190,"Darren Ferguson",355,71),r(42191,"Yesenia Pacheco",170,34),r(42241,"Christian Suanes",330,66),r(70027,"Mayra Lopez",440,88)],fullDay:[],dayNote:""},
+"4.30.26":{midDay:[r(40808,"Mayra Alvarez",400,80),r(40909,"Marco Hernandez Pantoja",290,58),r(40955,"Savannah Gabriel",55,11),r(41002,"Khi Crawford",400,80),r(42069,"Thomas Segura",315,63),r(42190,"Darren Ferguson",380,76),r(42191,"Yesenia Pacheco",550,110),r(42241,"Christian Suanes",365,73)],fullDay:[],dayNote:""}
+},
+"May 2026":{
+// ── MID-DAY: exact values from screenshots 2+3 ──
+"5.1.26":{
+  midDay:[
+    r(42173,"Alex Nava",0,34),
+    r(42241,"Christian Suanes",0,0),   // not shown for 5.1 mid
+    r(40825,"Cristina Roman",435,87),
+    r(42190,"Darren Ferguson",340,68),
+    r(40928,"Elvira Rodriguez",0,42),
+    r(40808,"Mayra Alvarez",365,73),
+    r(40909,"Marco Hernandez Pantoja",205,41),
+    r(41002,"Khi Crawford",355,71),
+    r(42069,"Thomas Segura",335,67),
+    r(42191,"Yesenia Pacheco",455,91),
+    r(40247,"Brandon Martell",120,24)
+  ],
+  // Full day 5.1 from screenshot 1
+  fullDay:[
+    r(40825,"Cristina Roman",0,142),
+    r(42190,"Darren Ferguson",0,113),
+    r(41002,"Khi Crawford",0,152),
+    r(40808,"Mayra Alvarez",0,140),
+    r(40955,"Savannah Gabriel",0,149),
+    r(42069,"Thomas Segura",0,123),
+    r(42191,"Yesenia Pacheco",0,143)
+  ],
+  dayNote:""},
+"5.3.26":{midDay:[],fullDay:[],dayNote:""},
+"5.4.26":{
+  midDay:[
+    r(42241,"Christian Suanes",330,66),
+    r(40825,"Cristina Roman",505,101),
+    r(42190,"Darren Ferguson",400,80),
+    r(40928,"Elvira Rodriguez",0,60),
+    r(42169,"Jacquelin Acosta",0,68),
+    r(41002,"Khi Crawford",395,53),
+    r(40543,"Mai Guerrero",0,129),
+    r(40808,"Mayra Alvarez",490,98),
+    r(70027,"Mayra Lopez",435,87),
+    r(40576,"Miguel Garcia",0,158),
+    r(40955,"Savannah Gabriel",410,82),
+    r(40972,"Marisela Lopez",390,78),
+    r(42069,"Thomas Segura",355,71),
+    r(40909,"Marco Hernandez Pantoja",275,55)
+  ],
+  // Full day 5.4 from screenshot 1: CS=112,CR=177,DF=138,MA=163,ML=158,MHP=132,TS=134,SG=149
+  fullDay:[
+    r(42241,"Christian Suanes",0,112),
+    r(40825,"Cristina Roman",0,177),
+    r(42190,"Darren Ferguson",0,138),
+    r(40808,"Mayra Alvarez",0,163),
+    r(70027,"Mayra Lopez",0,158),
+    r(40909,"Marco Hernandez Pantoja",0,132),
+    r(42069,"Thomas Segura",0,134),
+    r(40955,"Savannah Gabriel",0,149)
+  ],
+  dayNote:""},
+"5.5.26":{
+  midDay:[
+    r(42241,"Christian Suanes",460,92),
+    r(40825,"Cristina Roman",175,70),
+    r(42190,"Darren Ferguson",355,71),
+    r(42169,"Jacquelin Acosta",0,58),
+    r(41002,"Khi Campbell",0,75),
+    r(40543,"Mai Guerrero",315,50),
+    r(40808,"Mayra Alvarez",510,102),
+    r(70027,"Mayra Lopez",530,106),
+    r(40909,"Marco Hernandez Pantoja",465,93),
+    r(42069,"Thomas Segura",345,69),
+    r(40576,"Miguel Garcia",390,78)
+  ],
+  // Full day 5.5: CS=149,CR=0,DF=142,MA=209,ML=193,MHP=136,TS=137
+  fullDay:[
+    r(42241,"Christian Suanes",0,149),
+    r(42190,"Darren Ferguson",0,142),
+    r(40808,"Mayra Alvarez",0,209),
+    r(70027,"Mayra Lopez",0,193),
+    r(40909,"Marco Hernandez Pantoja",0,136),
+    r(42069,"Thomas Segura",0,137)
+  ],
+  dayNote:""},
+"5.6.26":{
+  midDay:[
+    r(42241,"Christian Suanes",335,67),
+    r(40825,"Cristina Roman",400,80),
+    r(42190,"Darren Ferguson",360,72),
+    r(42169,"Jacquelin Acosta",0,56),
+    r(41002,"Khi Crawford",375,79),
+    r(40543,"Mai Guerrero",0,65),
+    r(40808,"Mayra Alvarez",435,87),
+    r(70027,"Mayra Lopez",390,78),
+    r(40909,"Marco Hernandez Pantoja",310,62),
+    r(42069,"Thomas Segura",340,68)
+  ],
+  // Full day 5.6: CS=120,Jac=162,KhiC=156,MA=163,ML=150,MHP=129,TS=140
+  fullDay:[
+    r(42241,"Christian Suanes",0,120),
+    r(42169,"Jacquelin Acosta",0,162),
+    r(41002,"Khi Crawford",0,156),
+    r(40808,"Mayra Alvarez",0,163),
+    r(70027,"Mayra Lopez",0,150),
+    r(40909,"Marco Hernandez Pantoja",0,129),
+    r(42069,"Thomas Segura",0,140)
+  ],
+  dayNote:""},
+"5.7.26":{
+  midDay:[
+    r(42241,"Christian Suanes",290,58),
+    r(40825,"Cristina Roman",240,124),
+    r(42190,"Darren Ferguson",355,71),
+    r(42169,"Jacquelin Acosta",390,78),
+    r(41002,"Khi Crawford",395,79),
+    r(40543,"Mai Guerrero",0,99),
+    r(40808,"Mayra Alvarez",520,104),
+    r(40909,"Marco Hernandez Pantoja",375,75),
+    r(42069,"Thomas Segura",360,72)
+  ],
+  // Full day 5.7: CS=120,Jac=162,KhiC=162,MA=183,MHP=142,TS=149
+  fullDay:[
+    r(42241,"Christian Suanes",0,120),
+    r(42169,"Jacquelin Acosta",0,162),
+    r(41002,"Khi Crawford",0,162),
+    r(40808,"Mayra Alvarez",0,183),
+    r(40909,"Marco Hernandez Pantoja",0,142),
+    r(42069,"Thomas Segura",0,149)
+  ],
+  dayNote:""},
+"5.8.26":{
+  midDay:[
+    r(42173,"Alex Nava",0,44),
+    r(42241,"Christian Suanes",0,84),
+    r(42190,"Darren Ferguson",320,64),
+    r(42052,"Keilani Sossamon",0,50),
+    r(41002,"Khi Crawford",345,69),
+    r(40543,"Mai Guerrero",225,99),
+    r(40808,"Mayra Alvarez",485,97),
+    r(70027,"Mayra Lopez",495,99),
+    r(40909,"Marco Hernandez Pantoja",365,73),
+    r(42069,"Thomas Segura",315,63)
+  ],
+  // Full day 5.8: CS=135,DF=135,KhiC=135,MA=166,ML=173,MHP=141,TS=133
+  fullDay:[
+    r(42241,"Christian Suanes",0,135),
+    r(42190,"Darren Ferguson",0,135),
+    r(41002,"Khi Crawford",0,135),
+    r(40808,"Mayra Alvarez",0,166),
+    r(70027,"Mayra Lopez",0,173),
+    r(40909,"Marco Hernandez Pantoja",0,141),
+    r(42069,"Thomas Segura",0,133)
+  ],
+  dayNote:""},
+"5.10.26":{
+  midDay:[r(42241,"Christian Suanes",0,84)],  // 5.10 col shows CS=84 in screenshot
+  fullDay:[],
+  dayNote:""},
+"5.11.26":{
+  midDay:[
+    r(42173,"Alex Nava",0,39),
+    r(42241,"Christian Suanes",0,70),
+    r(40825,"Cristina Roman",535,107),
+    r(42190,"Darren Ferguson",380,76),
+    r(42083,"Elizabeth Almazan Martinez",355,71),
+    r(42169,"Jacquelin Acosta",0,61),
+    r(41002,"Khi Crawford",355,71),
+    r(40543,"Mai Guerrero",0,50),
+    r(40808,"Mayra Alvarez",425,85),
+    r(70027,"Mayra Lopez",440,88),
+    r(40909,"Marco Hernandez Pantoja",380,76),
+    r(40895,"Sandra Bonilla",360,72),
+    r(42069,"Thomas Segura",350,70)
+  ],
+  // Full day 5.11: CS=133,CR=185,DF=101,EAM=106,KhiC=122,MA=164,ML=158,MHP=129,TS=144
+  fullDay:[
+    r(42241,"Christian Suanes",0,133),
+    r(40825,"Cristina Roman",0,185),
+    r(42190,"Darren Ferguson",0,101),
+    r(42083,"Elizabeth Almazan Martinez",0,106),
+    r(41002,"Khi Crawford",0,122),
+    r(40808,"Mayra Alvarez",0,164),
+    r(70027,"Mayra Lopez",0,158),
+    r(40909,"Marco Hernandez Pantoja",0,129),
+    r(42069,"Thomas Segura",0,144)
+  ],
+  dayNote:""},
+"5.12.26":{
+  midDay:[
+    r(42241,"Christian Suanes",375,75),
+    r(42190,"Darren Ferguson",405,81),
+    r(42169,"Jacquelin Acosta",0,54),
+    r(41002,"Khi Crawford",410,82),
+    r(40543,"Mai Guerrero",270,111),
+    r(40808,"Mayra Alvarez",540,108),
+    r(40909,"Marco Hernandez Pantoja",400,80),
+    r(42069,"Thomas Segura",375,75),
+    r(70124,"Rogelio Galvan Virgen",350,70)
+  ],
+  // Full day 5.12: CS=145,DF=136,KhiC=156,MA=178,MHP=165,TS=151
+  fullDay:[
+    r(42241,"Christian Suanes",0,145),
+    r(42190,"Darren Ferguson",0,136),
+    r(41002,"Khi Crawford",0,156),
+    r(40808,"Mayra Alvarez",0,178),
+    r(40909,"Marco Hernandez Pantoja",0,165),
+    r(42069,"Thomas Segura",0,151)
+  ],
+  dayNote:""},
+"5.13.26":{
+  midDay:[
+    r(42173,"Alex Nava",0,30),
+    r(42241,"Christian Suanes",300,60),
+    r(40825,"Cristina Roman",395,79),
+    r(42190,"Darren Ferguson",245,49),
+    r(42083,"Elizabeth Almazan Martinez",465,93),
+    r(42169,"Jacquelin Acosta",0,55),
+    r(41002,"Khi Crawford",0,73),
+    r(40543,"Mai Guerrero",460,92),
+    r(40610,"Amie Montani",35,7),
+    r(70027,"Mayra Lopez",515,103),
+    r(40909,"Marco Hernandez Pantoja",60,74),
+    r(40850,"Maria Chavez",5,1),
+    r(42069,"Thomas Segura",380,76),
+    r(42181,"Shaelie Wall",5,1)
+  ],
+  // Full day 5.13: CS=113,CR=145,DF=105,EAM=171,ML=192,TS=148,Mai=144
+  fullDay:[
+    r(42241,"Christian Suanes",0,113),
+    r(40825,"Cristina Roman",0,145),
+    r(42190,"Darren Ferguson",0,105),
+    r(42083,"Elizabeth Almazan Martinez",0,171),
+    r(70027,"Mayra Lopez",0,192),
+    r(42069,"Thomas Segura",0,148),
+    r(40543,"Mai Guerrero",0,144)
+  ],
+  dayNote:""},
+"5.14.26":{
+  // Mid-day 5.14: CS=81, Jac=62, KhiC=74, Mai=77, EAM not shown mid
+  midDay:[
+    r(42241,"Christian Suanes",0,81),
+    r(42169,"Jacquelin Acosta",0,62),
+    r(41002,"Khi Crawford",0,74),
+    r(40543,"Mai Guerrero",0,77)
+  ],
+  // Full day 5.14: CR=157,DF=172,EAM=146,MA=161,ML=186,TS=150
+  fullDay:[
+    r(40825,"Cristina Roman",0,157),
+    r(42190,"Darren Ferguson",0,172),
+    r(42083,"Elizabeth Almazan Martinez",0,146),
+    r(40808,"Mayra Alvarez",0,161),
+    r(70027,"Mayra Lopez",0,186),
+    r(42069,"Thomas Segura",0,150)
+  ],
+  dayNote:""},
+"5.15.26":{
+  // Mid-day 5.15: Alex Nava=42, EAM=70, ER=45, Jac=57, KS=46, KhiC=35, Mai=45
+  midDay:[
+    r(42173,"Alex Nava",0,42),
+    r(42083,"Elizabeth Almazan Martinez",0,70),
+    r(40928,"Elvira Rodriguez",0,45),
+    r(42169,"Jacquelin Acosta",0,57),
+    r(42052,"Keilani Sossamon",0,46),
+    r(41002,"Khi Crawford",0,35),
+    r(40543,"Mai Guerrero",0,45),
+    r(40576,"Miguel Garcia",0,45)
+  ],
+  // Full day 5.15: CS=155,CR=121,DF=143,MA=111,ML=189,TS=149
+  fullDay:[
+    r(42241,"Christian Suanes",0,155),
+    r(40825,"Cristina Roman",0,121),
+    r(42190,"Darren Ferguson",0,143),
+    r(40808,"Mayra Alvarez",0,111),
+    r(70027,"Mayra Lopez",0,189),
+    r(42069,"Thomas Segura",0,149)
+  ],
+  dayNote:""},
+"5.17.26":{
+  midDay:[],
+  // Full day 5.17: CS=153,CR=112,DF=130,EAM=158,MA=170,ML=174,MHP=145,TS=131
+  fullDay:[
+    r(42241,"Christian Suanes",0,153),
+    r(40825,"Cristina Roman",0,112),
+    r(42190,"Darren Ferguson",0,130),
+    r(42083,"Elizabeth Almazan Martinez",0,158),
+    r(40808,"Mayra Alvarez",0,170),
+    r(70027,"Mayra Lopez",0,174),
+    r(40909,"Marco Hernandez Pantoja",0,145),
+    r(42069,"Thomas Segura",0,131)
+  ],
+  dayNote:""},
+// 5.18 - Miguel Garcia mid=45 visible in screenshot 3
+"5.18.26":{
+  midDay:[r(40576,"Miguel Garcia",0,45)],
+  fullDay:[],
+  dayNote:""},
+"5.19.26":{midDay:[],fullDay:[],dayNote:""},"5.20.26":{midDay:[],fullDay:[],dayNote:""},"5.21.26":{midDay:[],fullDay:[],dayNote:""},"5.22.26":{midDay:[],fullDay:[],dayNote:""},"5.24.26":{midDay:[],fullDay:[],dayNote:""},"5.25.26":{midDay:[],fullDay:[],dayNote:""},"5.26.26":{midDay:[],fullDay:[],dayNote:""},"5.27.26":{midDay:[],fullDay:[],dayNote:""},"5.28.26":{midDay:[],fullDay:[],dayNote:""},"5.29.26":{midDay:[],fullDay:[],dayNote:""},"5.31.26":{midDay:[],fullDay:[],dayNote:""}
+}};
+
+// Fix Mid-Day values from screenshots — patch exact values read cell by cell
+// 5.4: Khi Crawford mid=53 (not 53), Jacquelin=68, Mai=129, Marisela=78, SG=82
+SEED["May 2026"]["5.4.26"].midDay = [
+  r(42241,"Christian Suanes",330,66),r(40825,"Cristina Roman",505,101),r(42190,"Darren Ferguson",400,80),
+  r(40928,"Elvira Rodriguez",0,60),r(42169,"Jacquelin Acosta",0,68),r(41002,"Khi Crawford",0,53),
+  r(40543,"Mai Guerrero",0,129),r(40808,"Mayra Alvarez",490,98),r(70027,"Mayra Lopez",435,87),
+  r(40576,"Miguel Garcia",0,158),r(40955,"Savannah Gabriel",410,82),r(40972,"Marisela Lopez",390,78),
+  r(42069,"Thomas Segura",355,71),r(40909,"Marco Hernandez Pantoja",275,55)
+];
+// 5.5: CR=70, Jac=58, KhiC=75, Mai=50
+SEED["May 2026"]["5.5.26"].midDay = [
+  r(42241,"Christian Suanes",460,92),r(40825,"Cristina Roman",175,70),r(42190,"Darren Ferguson",355,71),
+  r(42169,"Jacquelin Acosta",0,58),r(41002,"Khi Crawford",0,75),r(40543,"Mai Guerrero",315,50),
+  r(40808,"Mayra Alvarez",510,102),r(70027,"Mayra Lopez",530,106),r(40909,"Marco Hernandez Pantoja",465,93),
+  r(42069,"Thomas Segura",345,69),r(40576,"Miguel Garcia",390,78)
+];
+// 5.6: Jac=56, KhiC=79, Mai=65
+SEED["May 2026"]["5.6.26"].midDay = [
+  r(42241,"Christian Suanes",335,67),r(40825,"Cristina Roman",400,80),r(42190,"Darren Ferguson",360,72),
+  r(42169,"Jacquelin Acosta",0,56),r(41002,"Khi Crawford",375,79),r(40543,"Mai Guerrero",0,65),
+  r(40808,"Mayra Alvarez",435,87),r(70027,"Mayra Lopez",390,78),r(40909,"Marco Hernandez Pantoja",310,62),
+  r(42069,"Thomas Segura",340,68)
+];
+// 5.7: CR=124, Jac=78, KhiC=79→already, Mai=99
+SEED["May 2026"]["5.7.26"].midDay = [
+  r(42241,"Christian Suanes",290,58),r(40825,"Cristina Roman",240,124),r(42190,"Darren Ferguson",355,71),
+  r(42169,"Jacquelin Acosta",390,78),r(41002,"Khi Crawford",395,79),r(40543,"Mai Guerrero",0,99),
+  r(40808,"Mayra Alvarez",520,104),r(40909,"Marco Hernandez Pantoja",375,75),r(42069,"Thomas Segura",360,72)
+];
+// 5.8: CS=84(5.10 col actually), Alex=44, KS=50, KhiC=69, Mai=99
+SEED["May 2026"]["5.8.26"].midDay = [
+  r(42173,"Alex Nava",0,44),r(42190,"Darren Ferguson",320,64),r(42052,"Keilani Sossamon",0,50),
+  r(41002,"Khi Crawford",345,69),r(40543,"Mai Guerrero",225,99),r(40808,"Mayra Alvarez",485,97),
+  r(70027,"Mayra Lopez",495,99),r(40909,"Marco Hernandez Pantoja",365,73),r(42069,"Thomas Segura",315,63)
+];
+// 5.10: CS=84
+SEED["May 2026"]["5.10.26"].midDay = [r(42241,"Christian Suanes",0,84)];
+// 5.12: Jac=54, Mai=111
+SEED["May 2026"]["5.12.26"].midDay = [
+  r(42241,"Christian Suanes",375,75),r(42190,"Darren Ferguson",405,81),r(42169,"Jacquelin Acosta",0,54),
+  r(41002,"Khi Crawford",410,82),r(40543,"Mai Guerrero",270,111),r(40808,"Mayra Alvarez",540,108),
+  r(40909,"Marco Hernandez Pantoja",400,80),r(42069,"Thomas Segura",375,75),r(70124,"Rogelio Galvan Virgen",350,70)
+];
+// 5.13: Jac=55, KhiC=73, MHP=74 (74 shown)
+SEED["May 2026"]["5.13.26"].midDay = [
+  r(42173,"Alex Nava",0,30),r(42241,"Christian Suanes",300,60),r(40825,"Cristina Roman",395,79),
+  r(42190,"Darren Ferguson",245,49),r(42083,"Elizabeth Almazan Martinez",465,93),r(42169,"Jacquelin Acosta",0,55),
+  r(41002,"Khi Crawford",0,73),r(40543,"Mai Guerrero",460,92),r(40610,"Amie Montani",35,7),
+  r(70027,"Mayra Lopez",515,103),r(40909,"Marco Hernandez Pantoja",60,74),r(40850,"Maria Chavez",5,1),
+  r(42069,"Thomas Segura",380,76),r(42181,"Shaelie Wall",5,1)
+];
+
+const STORAGE_KEY='packingRateDB_SH_CORRECT_v1';
+const ASSOCIATES=['Alex Nava','Amie Montani','Blendon Holtzer','Brandon Martell','Christian Suanes','Cristina Roman','Darren Ferguson','Denissol Padilla','Elizabeth Almazan Martinez','Elvira Rodriguez','Guillermo Gracian','Jacquelin Acosta','Keilani Sossamon','Khi Crawford','Lisardo Araqui','Mai Guerrero','Marco Hernandez Pantoja','Maria Chavez','Marisela Lopez','Mayra Alvarez','Mayra Lopez','Miguel Garcia','Rogelio Galvan Virgen','Sandra Bonilla','Savannah Gabriel','Shaelie Wall','Thomas Segura','Yesenia Pacheco'];
+let DB=JSON.parse(JSON.stringify(SEED));
+
+async function initDB(){
+  await loadShared();updateHeaderMonths();renderDashboard();
+  setInterval(async()=>{const prev=JSON.stringify(DB);await loadShared();if(JSON.stringify(DB)!==prev){const s=document.getElementById('sync-status');if(s)s.textContent='↻ Updated!';setTimeout(()=>{if(s)s.textContent='Live · Changes sync instantly to everyone';},2000);const tab=document.querySelector('.nav-btn.active');if(tab)tab.click();}},12000);
+}
+async function loadShared(){
+  try{const res=await window.storage.get(STORAGE_KEY,true);if(res&&res.value){const d=JSON.parse(res.value);for(const m of Object.keys(d)){if(!DB[m])DB[m]={};for(const dt of Object.keys(d[m])){if(isSat(dt))continue;if(!d[m][dt].dayNote)d[m][dt].dayNote='';if(!d[m][dt].midDay)d[m][dt].midDay=[];if(!d[m][dt].fullDay)d[m][dt].fullDay=[];DB[m][dt]=d[m][dt];}}}}catch(e){}
+}
+async function saveDB(){
+  for(const m of Object.keys(DB))for(const dt of Object.keys(DB[m])){if(isSat(dt))delete DB[m][dt];}
+  try{await window.storage.set(STORAGE_KEY,JSON.stringify(DB),true);const s=document.getElementById('sync-status');if(s){s.textContent='✓ Saved & synced';setTimeout(()=>{s.textContent='Live · Changes sync instantly to everyone';},2000);}}catch(e){}
+}
+async function forceSync(){const s=document.getElementById('sync-status');if(s)s.textContent='Syncing...';await loadShared();const tab=document.querySelector('.nav-btn.active');if(tab)tab.click();if(s)s.textContent='Live · Changes sync instantly to everyone';}
+
+function MONTHS(){return Object.keys(DB).sort((a,b)=>{const[ma,ya]=a.split(' ');const[mb,yb]=b.split(' ');const mi=['January','February','March','April','May','June','July','August','September','October','November','December'];return(Number(ya)-Number(yb))||mi.indexOf(ma)-mi.indexOf(mb);});}
+function getDateKeys(m){return Object.keys(DB[m]||{}).filter(d=>!isSat(d)).sort((a,b)=>{const p=s=>s.split('.').map(Number);const[ma,da]=p(a);const[mb,db]=p(b);return ma-mb||da-db;});}
+function cfStyle(val,sec){if(!val)return'';const v=Number(val);if(isNaN(v)||v<=0)return'';if(sec==='midDay'){if(v>=73)return'background:#B8DBAB;font-weight:700;color:#14532d';if(v>=67)return'background:#FFFF00;font-weight:700;color:#713f12';return'background:#F1A983;font-weight:700;color:#7c2d12';}else{if(v>=146)return'background:#B8DBAB;font-weight:700;color:#14532d';if(v>=131)return'background:#FFFF00;font-weight:700;color:#713f12';return'background:#F1A983;font-weight:700;color:#7c2d12';}}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2800);}
+function updateHeaderMonths(){const el=document.getElementById('header-months');if(el)el.textContent=MONTHS().join(' · ');}
+function openMonthModal(){document.getElementById('month-modal').style.display='flex';document.getElementById('month-list').innerHTML=MONTHS().map(m=>`<span style="background:#FDF0E0;border:1px solid #E8D5BC;border-radius:20px;padding:3px 9px;font-size:11px;font-weight:600;color:#5C2D0A">📅 ${m}</span>`).join('');}
+function closeMonthModal(){document.getElementById('month-modal').style.display='none';}
+function confirmAddMonth(){const mon=document.getElementById('new-month-sel').value,yr=document.getElementById('new-year-sel').value,info=document.getElementById('month-modal-info');if(!mon){info.textContent='⚠️ Select a month.';info.style.color='#dc2626';return;}const label=`${mon} ${yr}`;if(DB[label]){info.textContent='⚠️ Already exists.';info.style.color='#dc2626';return;}DB[label]=genMonth(label);saveDB();updateHeaderMonths();openMonthModal();info.textContent=`✅ ${label} added!`;info.style.color='#16a34a';}
+function showTab(name){document.querySelectorAll('.nav-btn').forEach((b,i)=>{b.classList.toggle('active',['dashboard','daily','summary','quick','import'][i]===name);});['dashboard','daily','summary','quick','import'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'':'none';});({dashboard:renderDashboard,daily:renderDaily,summary:renderSummary,quick:renderQuick,import:renderImport})[name]();}
+
+function renderDashboard(){
+  const el=document.getElementById('tab-dashboard');if(!el)return;
+  let td=0,tm=0,tf=0;for(const m of MONTHS())for(const d of getDateKeys(m)){const day=DB[m][d];if(day.midDay.length||day.fullDay.length)td++;tm+=day.midDay.length;tf+=day.fullDay.length;}
+  function bP(sec){const p={};for(const m of MONTHS())for(const d of getDateKeys(m))for(const row of DB[m][d][sec]){if(!row.name||!row.transactions)continue;if(!p[row.name])p[row.name]={total:0,count:0};p[row.name].total+=row.transactions;p[row.name].count++;}return Object.entries(p).filter(([,v])=>v.count>1).map(([name,v])=>({name,avg:v.total/v.count,days:v.count})).sort((a,b)=>b.avg-a.avg).slice(0,5);}
+  const mT=bP('midDay'),fT=bP('fullDay');
+  const recent=[];for(const m of MONTHS())for(const d of getDateKeys(m)){const day=DB[m][d];if(day.midDay.length||day.fullDay.length)recent.push({month:m,date:d,mid:day.midDay.length,full:day.fullDay.length});}recent.reverse();
+  const rb=i=>`<span class="rank rank-${i<3?i+1:'n'}">${i+1}</span>`;
+  const pt=(rows,sec,title)=>`<div class="card"><div class="card-title">${title}</div><div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#F1A983"></div>${sec==='midDay'?'≤66':'≤130'} Below</div><div class="legend-item"><div class="legend-dot" style="background:#FFFF00"></div>${sec==='midDay'?'67–72':'131–145'} Near</div><div class="legend-item"><div class="legend-dot" style="background:#B8DBAB"></div>${sec==='midDay'?'≥73':'≥146'} Target</div></div><table><thead><tr><th>Associate</th><th>Avg</th><th>Days</th></tr></thead><tbody>${rows.length?rows.map((p,i)=>`<tr><td>${rb(i)}${p.name}</td><td><span style="${cfStyle(Math.round(p.avg),sec)};padding:2px 9px;border-radius:5px;display:inline-block">${p.avg.toFixed(1)}</span></td><td><span class="badge badge-blue">${p.days}</span></td></tr>`).join(''):'<tr><td colspan="3" class="empty-state">No data</td></tr>'}</tbody></table></div>`;
+  el.innerHTML=`<div class="summary-grid"><div class="stat-card"><div class="val">${td}</div><div class="lbl">Days with Data</div></div><div class="stat-card"><div class="val">${tm}</div><div class="lbl">Mid-Day Records</div></div><div class="stat-card"><div class="val">${tf}</div><div class="lbl">Full Day Records</div></div><div class="stat-card"><div class="val">${ASSOCIATES.length}</div><div class="lbl">Associates</div></div></div><div class="perf-grid">${pt(mT,'midDay','🏆 Top — Mid-Day (4hrs)')}${pt(fT,'fullDay','🏆 Top — Full Day (8hrs)')}</div><div class="card"><div class="card-title">🕐 Recent Entries</div><table><thead><tr><th>Date</th><th>Month</th><th>Mid-Day</th><th>Full Day</th></tr></thead><tbody>${recent.slice(0,7).map(row=>`<tr><td><strong>${row.date}</strong></td><td>${row.month}</td><td><span class="badge badge-blue">${row.mid}</span></td><td><span class="badge ${row.full?'badge-green':'badge-yellow'}">${row.full}</span></td></tr>`).join('')}</tbody></table></div>`;
+}
+
+let DS={month:(MONTHS()[1]||MONTHS()[0]),date:'',section:'midDay'};
+function renderDaily(){
+  const el=document.getElementById('tab-daily');if(!el)return;
+  const dates=getDateKeys(DS.month);if(!DS.date||!dates.includes(DS.date))DS.date=dates[dates.length-1]||'';
+  if(!DB[DS.month][DS.date])DB[DS.month][DS.date]={midDay:[],fullDay:[],dayNote:''};
+  const day=DB[DS.month][DS.date],rows=day[DS.section]||[],sec=DS.section;
+  el.innerHTML=`<div class="card"><div class="controls"><select onchange="DS.month=this.value;DS.date='';renderDaily()">${MONTHS().map(m=>`<option ${m===DS.month?'selected':''}>${m}</option>`).join('')}</select><select onchange="DS.date=this.value;renderDaily()">${dates.map(d=>`<option ${d===DS.date?'selected':''}>${d}</option>`).join('')}</select><div class="seg"><button class="seg-btn ${sec==='midDay'?'active':''}" onclick="DS.section='midDay';renderDaily()">Mid-Day (4hrs)</button><button class="seg-btn ${sec==='fullDay'?'active':''}" onclick="DS.section='fullDay';renderDaily()">Full Day (8hrs)</button></div></div>
+  <div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#F1A983"></div>${sec==='midDay'?'≤66':'≤130'} Below</div><div class="legend-item"><div class="legend-dot" style="background:#FFFF00"></div>${sec==='midDay'?'67–72':'131–145'} Near</div><div class="legend-item"><div class="legend-dot" style="background:#B8DBAB"></div>${sec==='midDay'?'≥73':'≥146'} Target</div></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:7px"><span class="badge badge-blue">${rows.length} records · ${DS.date}</span><div style="display:flex;gap:5px"><button class="btn-success" onclick="addRow()">+ Add Row</button>${rows.length?`<button class="btn-danger" style="padding:5px 10px" onclick="clearSection()">Clear All</button>`:''}</div></div>
+  <div style="margin-bottom:10px;background:#FDF5EC;border:1.5px solid #E8D5BC;border-radius:8px;padding:9px 11px"><label style="font-size:10px;font-weight:700;color:#7B4A1E;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">📝 Day Note</label><textarea rows="2" placeholder="Add a note..." style="width:100%;font-size:12px;border:1.5px solid #E8D5BC;border-radius:6px;padding:6px 8px;resize:vertical;font-family:inherit;color:#3D1C02" onblur="saveDayNote(this.value)">${day.dayNote||''}</textarea></div>
+  <div class="scroll-x"><table><thead><tr><th>Emp.ID</th><th>Name</th><th>Time</th><th>Pieces</th><th>PPH</th><th>Transactions</th><th>TPH</th><th>Note</th><th></th></tr></thead><tbody>${rows.length?rows.map((row,i)=>rHTML(row,i,sec)).join(''):`<tr><td colspan="9" class="empty-state">No data. Add rows, use Quick Add, or import XLSX.</td></tr>`}</tbody></table></div>
+  <p style="font-size:10px;color:#C4A882;margin-top:7px">💡 Click any cell to edit. Changes sync live to all users.</p></div>`;
+}
+function rHTML(row,i,sec){const tx=cfStyle(row.transactions,sec);return`<tr><td><span class="editable" contenteditable="true" onblur="uCell(${i},'employeeId',this.textContent.trim())">${row.employeeId||''}</span></td><td><select style="font-size:11px;padding:2px 5px;border:1.5px solid #E8D5BC;border-radius:5px;max-width:150px" onchange="uCell(${i},'name',this.value)"><option value="${row.name||''}">${row.name||'-- select --'}</option>${ASSOCIATES.filter(a=>a!==row.name).map(a=>`<option value="${a}">${a}</option>`).join('')}<option value="__new__">+ New...</option></select></td><td><span class="editable" contenteditable="true" onblur="uCell(${i},'time',this.textContent.trim())">${row.time||''}</span></td><td><span class="editable" contenteditable="true" onblur="uCell(${i},'pieces',this.textContent.trim())">${row.pieces??0}</span></td><td><span class="editable" contenteditable="true" onblur="uCell(${i},'pph',this.textContent.trim())">${row.pph??0}</span></td><td style="${tx};border-radius:4px"><span class="editable" contenteditable="true" style="display:block;padding:2px 4px" onblur="uCell(${i},'transactions',this.textContent.trim());renderDaily()">${row.transactions||''}</span></td><td><span class="editable" contenteditable="true" onblur="uCell(${i},'tph',this.textContent.trim())">${row.tph||720}</span></td><td><span class="editable" contenteditable="true" style="min-width:70px;font-size:11px;color:#8B6040;font-style:italic" onblur="uCell(${i},'note',this.textContent.trim())">${row.note||''}</span></td><td style="display:flex;gap:3px;padding:4px 6px">${sec==='fullDay'?`<button class="btn-move" onclick="mv(${i})">→Mid</button>`:''}<button class="btn-danger" onclick="delRow(${i})">✕</button></td></tr>`;}
+function mv(i){const m=DS.month,d=DS.date,row=DB[m][d].fullDay[i];if(!row)return;if(!confirm(`Move ${row.name} to Mid-Day?`))return;DB[m][d].midDay.push({...row});DB[m][d].fullDay.splice(i,1);saveDB();toast('✅ Moved to Mid-Day');renderDaily();}
+function uCell(i,field,val){if(!DB[DS.month][DS.date])return;const rows=DB[DS.month][DS.date][DS.section];if(val==='__new__'){const name=prompt('Enter new associate name:');if(name){rows[i][field]=name;saveDB();renderDaily();}return;}const nums=['transactionType','employeeId','time','pieces','pph','transactions','tph'];rows[i][field]=nums.includes(field)?(parseFloat(val)||0):val;saveDB();}
+function saveDayNote(val){const m=DS.month,d=DS.date;if(!DB[m][d])DB[m][d]={midDay:[],fullDay:[],dayNote:''};DB[m][d].dayNote=val;saveDB();}
+function addRow(){if(!DB[DS.month][DS.date])DB[DS.month][DS.date]={midDay:[],fullDay:[],dayNote:''};DB[DS.month][DS.date][DS.section].push({transactionType:906,description:'Print Manifest Label',employeeId:'',name:'',time:0,pieces:0,pph:0,transactions:0,tph:720,note:''});saveDB();renderDaily();}
+function delRow(i){DB[DS.month][DS.date][DS.section].splice(i,1);saveDB();renderDaily();}
+function clearSection(){if(!confirm('Clear all rows?'))return;DB[DS.month][DS.date][DS.section]=[];saveDB();renderDaily();}
+
+let SS={month:MONTHS()[0],section:'midDay'};
+function renderSummary(){
+  const el=document.getElementById('tab-summary');if(!el)return;
+  const dates=getDateKeys(SS.month),sec=SS.section,aM={};
+  for(const d of dates){for(const row of(DB[SS.month][d]||{})[sec]||[]){if(!row.name||!row.transactions)continue;if(!aM[row.name])aM[row.name]={};aM[row.name][d]=(aM[row.name][d]||0)+row.transactions;}}
+  const names=Object.keys(aM).sort();
+  const gA=name=>{const v=Object.values(aM[name]).filter(v=>v>0);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;};
+  let tRows='';
+  names.forEach((name,ni)=>{const s=ni%2===0?'background:#FDFAF5':'background:#FDF5EC';const avg=gA(name);const as=avg?cfStyle(Math.round(avg),sec):'';tRows+=`<tr><td style="${s};font-weight:600;font-size:11px;color:#3D1C02">${name}</td><td style="${s};${as};text-align:center;font-size:11px">${avg?avg.toFixed(1):''}</td>${dates.map((d,di)=>{const v=aM[name]?.[d];const vs=v?cfStyle(v,sec):'';return`<td style="${s};${vs};${di>0?'border-left:1px solid #E8D5BC':''};text-align:center;font-size:11px">${v||''}</td>`;}).join('')}</tr>`;});
+  el.innerHTML=`<div class="card"><div class="controls"><select onchange="SS.month=this.value;renderSummary()">${MONTHS().map(m=>`<option ${m===SS.month?'selected':''}>${m}</option>`).join('')}</select><div class="seg"><button class="seg-btn ${sec==='midDay'?'active':''}" onclick="SS.section='midDay';renderSummary()">Mid-Day (4hrs)</button><button class="seg-btn ${sec==='fullDay'?'active':''}" onclick="SS.section='fullDay';renderSummary()">Full Day (8hrs)</button></div></div><div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#F1A983"></div>${sec==='midDay'?'≤66':'≤130'} Below</div><div class="legend-item"><div class="legend-dot" style="background:#FFFF00"></div>${sec==='midDay'?'67–72':'131–145'} Near</div><div class="legend-item"><div class="legend-dot" style="background:#B8DBAB"></div>${sec==='midDay'?'≥73':'≥146'} Target</div></div>${names.length===0?`<div class="empty-state">No data yet.</div>`:`<div class="summary-wrap"><table><thead><tr><th style="position:sticky;left:0;background:#FDE8C8;color:#5C2D0A;z-index:3;min-width:145px">Associate</th><th style="position:sticky;left:145px;background:#F5D5A0;color:#5C2D0A;z-index:3;text-align:center;min-width:46px">Avg</th>${dates.map((d,di)=>`<th style="text-align:center;${di>0?'border-left:1px solid #E8D5BC':''}">${d.replace(/\.26$/,'')}</th>`).join('')}</tr></thead><tbody>${tRows}</tbody></table></div>`}</div>`;
+}
+
+let QS={month:(MONTHS()[1]||MONTHS()[0]),date:'',section:'midDay',rows:[{name:'',empId:'',time:'',transactions:'',note:''}]};
+function renderQuick(){
+  const el=document.getElementById('tab-quick');if(!el)return;
+  const dates=getDateKeys(QS.month);if(!QS.date||!dates.includes(QS.date))QS.date=dates[dates.length-1]||'';
+  const sec=QS.section;
+  el.innerHTML=`<div class="card"><div class="card-title">⚡ Quick Add</div><div class="info-box info-brown">📋 Type data from your screenshot. Select date &amp; section, fill rows, then Save All.</div>
+  <div class="controls"><select onchange="QS.month=this.value;QS.date='';renderQuick()">${MONTHS().map(m=>`<option ${m===QS.month?'selected':''}>${m}</option>`).join('')}</select><select onchange="QS.date=this.value">${dates.map(d=>`<option ${d===QS.date?'selected':''}>${d}</option>`).join('')}</select><div class="seg"><button class="seg-btn ${sec==='midDay'?'active':''}" onclick="QS.section='midDay';renderQuick()">Mid-Day</button><button class="seg-btn ${sec==='fullDay'?'active':''}" onclick="QS.section='fullDay';renderQuick()">Full Day</button></div></div>
+  <div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#F1A983"></div>${sec==='midDay'?'≤66':'≤130'} Below</div><div class="legend-item"><div class="legend-dot" style="background:#FFFF00"></div>${sec==='midDay'?'67–72':'131–145'} Near</div><div class="legend-item"><div class="legend-dot" style="background:#B8DBAB"></div>${sec==='midDay'?'≥73':'≥146'} Target</div></div>
+  <table style="margin-bottom:10px"><thead><tr><th>Name</th><th>Emp. ID</th><th>Time</th><th>Transactions</th><th>Note</th><th></th></tr></thead><tbody>${QS.rows.map((row,i)=>`<tr><td><select style="font-size:11px;padding:3px 5px;border:1.5px solid #E8D5BC;border-radius:6px;min-width:140px" onchange="QS.rows[${i}].name=this.value"><option value="${row.name||''}">${row.name||'-- select --'}</option>${ASSOCIATES.filter(a=>a!==row.name).map(a=>`<option value="${a}">${a}</option>`).join('')}<option value="__new__">+ New...</option></select></td><td><input type="text" value="${row.empId||''}" placeholder="ID" style="width:65px" oninput="QS.rows[${i}].empId=this.value"/></td><td><input type="number" value="${row.time||''}" placeholder="mins" style="width:65px" oninput="QS.rows[${i}].time=this.value"/></td><td><input type="number" value="${row.transactions||''}" placeholder="count" style="width:65px;${row.transactions?cfStyle(Number(row.transactions),sec):''}" oninput="QS.rows[${i}].transactions=this.value;renderQuick()"/></td><td><input type="text" value="${row.note||''}" placeholder="note" style="width:90px" oninput="QS.rows[${i}].note=this.value"/></td><td><button class="btn-danger" onclick="QS.rows.splice(${i},1);renderQuick()">✕</button></td></tr>`).join('')}</tbody></table>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-gray" onclick="QS.rows.push({name:'',empId:'',time:'',transactions:'',note:''});renderQuick()">+ Add Row</button><button class="btn-success" onclick="saveQuick()">💾 Save All to ${QS.date}</button><button class="btn-gray" onclick="QS.rows=[{name:'',empId:'',time:'',transactions:'',note:''}];renderQuick()">🗑 Clear</button></div></div>`;
+}
+function saveQuick(){const m=QS.month,d=QS.date,sec=QS.section;if(!d){toast('⚠ Select a date');return;}if(!DB[m][d])DB[m][d]={midDay:[],fullDay:[],dayNote:''};const vR=QS.rows.filter(row=>row.name&&row.name!='-- select --');if(!vR.length){toast('⚠ Enter at least one name');return;}DB[m][d][sec]=[...DB[m][d][sec],...vR.map(row=>({transactionType:906,description:'Print Manifest Label',employeeId:parseFloat(row.empId)||0,name:row.name,time:parseFloat(row.time)||0,pieces:0,pph:0,transactions:parseFloat(row.transactions)||0,tph:720,note:row.note||''}))];saveDB();toast(`✅ Saved ${vR.length} rows!`);QS.rows=[{name:'',empId:'',time:'',transactions:'',note:''}];renderQuick();}
+
+let IS={month:(MONTHS()[1]||MONTHS()[0]),date:'',section:'midDay',previewRows:null,error:null};
+function renderImport(){
+  const el=document.getElementById('tab-import');if(!el)return;
+  const dates=getDateKeys(IS.month);if(!IS.date||!dates.includes(IS.date))IS.date=dates[dates.length-1]||'';
+  el.innerHTML=`<div class="card"><div class="card-title">📥 Import XLSX / CSV</div>
+  <div class="info-box info-brown">Supports "Transactions Per Hour by Employee" XLSX. Columns: Transaction Type, Description, Employee ID, Name, Time, Pieces, PPH, Transactions, TPH.</div>
+  <div class="controls">
+    <select onchange="IS.month=this.value;IS.date='';renderImport()">${MONTHS().map(m=>`<option ${m===IS.month?'selected':''}>${m}</option>`).join('')}</select>
+    <select onchange="IS.date=this.value">${dates.map(d=>`<option ${d===IS.date?'selected':''}>${d}</option>`).join('')}</select>
+    <div class="seg"><button class="seg-btn ${IS.section==='midDay'?'active':''}" onclick="IS.section='midDay';renderImport()">Mid-Day</button><button class="seg-btn ${IS.section==='fullDay'?'active':''}" onclick="IS.section='fullDay';renderImport()">Full Day</button></div>
+    <button class="btn-primary" onclick="document.getElementById('xf').click()">📂 Choose XLSX / CSV</button>
+    <input type="file" id="xf" accept=".xlsx,.xls,.csv,.tsv" onchange="handleXLSX(event)"/>
+  </div>
+  ${IS.error?`<div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:10px;font-size:12px;color:#dc2626;margin-bottom:10px">⚠️ ${IS.error}</div>`:''}
+  ${IS.previewRows&&IS.previewRows.length?renderPrev():''}
+  </div>`;
+}
+function renderPrev(){const rows=IS.previewRows,sec=IS.section;return`<div class="info-green"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:7px"><strong>✅ ${rows.length} rows ready for ${IS.date}</strong><button class="btn-success" onclick="saveImported()">💾 Save & Sync</button></div><div class="scroll-x"><table><thead><tr><th>Emp.ID</th><th>Name</th><th>Time</th><th>Transactions</th><th>TPH</th></tr></thead><tbody>${rows.map(row=>`<tr><td>${row.employeeId}</td><td><strong>${row.name}</strong></td><td>${row.time}</td><td style="${cfStyle(row.transactions,sec)};border-radius:3px"><strong>${row.transactions}</strong></td><td>${row.tph||720}</td></tr>`).join('')}</tbody></table></div></div>`;}
+function saveImported(){const m=IS.month,d=IS.date,sec=IS.section;if(!DB[m][d])DB[m][d]={midDay:[],fullDay:[],dayNote:''};DB[m][d][sec]=[...DB[m][d][sec],...IS.previewRows.map(row=>({transactionType:906,description:'Print Manifest Label',employeeId:row.employeeId||0,name:row.name||'',time:row.time||0,pieces:row.pieces||0,pph:row.pph||0,transactions:row.transactions||0,tph:row.tph||720,note:''}))];saveDB();toast('✅ Saved & synced!');IS.previewRows=null;renderImport();}
+function handleXLSX(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{try{let rows=[];const name=file.name.toLowerCase();if(name.endsWith('.csv')||name.endsWith('.tsv')){const sep=name.endsWith('.tsv')?'\t':',';const text=new TextDecoder().decode(ev.target.result);const lines=text.split('\n').filter(l=>l.trim());if(!lines.length){IS.error='Empty file.';renderImport();return;}const headers=lines[0].split(sep).map(h=>h.replace(/"/g,'').trim().toLowerCase());const gc=(...terms)=>headers.findIndex(h=>terms.some(t=>h.includes(t)));const ni=gc('name'),ei=gc('employee id','emp id','employeeid'),ti=gc('time'),xi=gc('transactions'),pi=gc('tph'),qi=gc('pieces'),ri=gc('pph');if(ni<0){IS.error='Cannot find Name column.';renderImport();return;}for(let i=1;i<lines.length;i++){const c=lines[i].split(sep).map(s=>s.replace(/"/g,'').trim());if(!c[ni])continue;rows.push({transactionType:906,employeeId:ei>=0?parseFloat(c[ei])||0:0,name:c[ni],time:ti>=0?parseFloat(c[ti])||0:0,pieces:qi>=0?parseFloat(c[qi])||0:0,pph:ri>=0?parseFloat(c[ri])||0:0,transactions:xi>=0?parseFloat(c[xi])||0:0,tph:pi>=0?parseFloat(c[pi])||720:720});}}else{if(typeof XLSX==='undefined'){IS.error='XLSX library loading, please try again.';renderImport();return;}const data=new Uint8Array(ev.target.result);const wb=XLSX.read(data,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const json=XLSX.utils.sheet_to_json(ws,{defval:''});if(!json.length){IS.error='No data found.';renderImport();return;}const norm=h=>h.toString().toLowerCase().trim();const keys=Object.keys(json[0]);const fk=(...terms)=>keys.find(k=>terms.some(t=>norm(k).includes(t)))||null;const nk=fk('name'),ek=fk('employee id','emp id','employeeid'),tk=fk('time'),xk=fk('transactions'),pk=fk('tph'),qk=fk('pieces'),rk=fk('pph');if(!nk){IS.error='Cannot find Name column.';renderImport();return;}rows=json.filter(row=>row[nk]?.toString().trim()).map(row=>({transactionType:906,employeeId:ek?parseFloat(row[ek])||0:0,name:row[nk].toString().trim(),time:tk?parseFloat(row[tk])||0:0,pieces:qk?parseFloat(row[qk])||0:0,pph:rk?parseFloat(row[rk])||0:0,transactions:xk?parseFloat(row[xk])||0:0,tph:pk?parseFloat(row[pk])||720:720}));}if(!rows.length){IS.error='No valid rows found.';renderImport();return;}IS.previewRows=rows;IS.error=null;renderImport();}catch(err){IS.error='Could not read file: '+err.message;renderImport();}};reader.readAsArrayBuffer(file);e.target.value='';}
+
+initDB();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
