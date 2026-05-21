@@ -1,4 +1,3 @@
-
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(135deg,#2a1200 0%,#5c2d0a 100%);min-height:600px;color:#1a1a1a}
@@ -494,11 +493,52 @@ const ASSOCIATES=['Alex Nava','Amie Montani','Blendon Holtzer','Brandon Martell'
 let DB=JSON.parse(JSON.stringify(SEED));
 
 async function initDB(){
-  await loadShared();updateHeaderMonths();renderDashboard();
-  setInterval(async()=>{const prev=JSON.stringify(DB);await loadShared();if(JSON.stringify(DB)!==prev){const s=document.getElementById('sync-status');if(s)s.textContent='↻ Updated!';setTimeout(()=>{if(s)s.textContent='Live · Changes sync instantly to everyone';},2000);const tab=document.querySelector('.nav-btn.active');if(tab)tab.click();}},12000);
+  // On first load: push full SEED to storage if nothing is stored yet
+  // This ensures storage is always the source of truth from the very first load
+  const existing = await window.storage.get(STORAGE_KEY, true).catch(()=>null);
+  if(!existing || !existing.value){
+    await saveDB(); // write seed → storage immediately
+  }
+  await loadShared();
+  updateHeaderMonths();
+  renderDashboard();
+  setInterval(async()=>{
+    const prev=JSON.stringify(DB);
+    await loadShared();
+    if(JSON.stringify(DB)!==prev){
+      const s=document.getElementById('sync-status');
+      if(s)s.textContent='↻ Updated!';
+      setTimeout(()=>{if(s)s.textContent='Live · Changes sync instantly to everyone';},2000);
+      const tab=document.querySelector('.nav-btn.active');
+      if(tab)tab.click();
+    }
+  },12000);
 }
 async function loadShared(){
-  try{const res=await window.storage.get(STORAGE_KEY,true);if(res&&res.value){const d=JSON.parse(res.value);for(const m of Object.keys(d)){if(!DB[m])DB[m]={};for(const dt of Object.keys(d[m])){if(isSat(dt))continue;if(!d[m][dt].dayNote)d[m][dt].dayNote='';if(!d[m][dt].midDay)d[m][dt].midDay=[];if(!d[m][dt].fullDay)d[m][dt].fullDay=[];DB[m][dt]=d[m][dt];}}}}catch(e){}
+  try{
+    const res=await window.storage.get(STORAGE_KEY,true);
+    if(res&&res.value){
+      const d=JSON.parse(res.value);
+      // Storage is always the source of truth — replaces DB completely for any date that exists in storage
+      for(const m of Object.keys(d)){
+        if(!DB[m])DB[m]={};
+        for(const dt of Object.keys(d[m])){
+          if(isSat(dt))continue;
+          if(!d[m][dt].dayNote)d[m][dt].dayNote='';
+          if(!d[m][dt].midDay)d[m][dt].midDay=[];
+          if(!d[m][dt].fullDay)d[m][dt].fullDay=[];
+          DB[m][dt]=d[m][dt];
+        }
+      }
+      window._storageLoaded=true;
+    } else {
+      // First time ever — push seed to storage so all future edits persist correctly
+      if(!window._storageInitialized){
+        window._storageInitialized=true;
+        await saveDB();
+      }
+    }
+  }catch(e){}
 }
 async function saveDB(){
   for(const m of Object.keys(DB))for(const dt of Object.keys(DB[m])){if(isSat(dt))delete DB[m][dt];}
