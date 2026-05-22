@@ -93,7 +93,7 @@ input[type=file]{display:none}
 <div class="container">
   <div class="sync-bar">
     <span class="ld"></span>
-    <span id="sync-status">Live · Changes sync instantly to everyone</span>
+    <span id="sync-status">Live · Real-time sync across all devices</span>
     <span style="margin-left:auto;cursor:pointer;color:#F5C98A;font-weight:600" onclick="forceSync()">↻ Refresh</span>
   </div>
   <div class="nav">
@@ -488,38 +488,63 @@ SEED["May 2026"]["5.13.26"].midDay = [
   r(42069,"Thomas Segura",380,76),r(42181,"Shaelie Wall",5,1)
 ];
 
+const SUPABASE_URL='https://carnaexslmpwisoomwcu.supabase.co';
+const SUPABASE_KEY='sb_publishable_YpDpCieWEqu7f2XYbT2PbQ_GkwrMnOH';
 const STORAGE_KEY='packingRateDB_SH_CORRECT_v1';
+
+// Supabase helpers
+async function sbGet(){
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/tracker_data?id=eq.main&select=data`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    const json=await res.json();
+    return json&&json[0]?json[0].data:null;
+  }catch(e){return null;}
+}
+async function sbSet(data){
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/tracker_data?id=eq.main`,{
+      method:'PATCH',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({data:data,updated_at:new Date().toISOString()})
+    });
+  }catch(e){}
+}
 const ASSOCIATES=['Alex Nava','Amie Montani','Blendon Holtzer','Brandon Martell','Christian Suanes','Cristina Roman','Darren Ferguson','Denissol Padilla','Elizabeth Almazan Martinez','Elvira Rodriguez','Guillermo Gracian','Jacquelin Acosta','Keilani Sossamon','Khi Crawford','Lisardo Araqui','Mai Guerrero','Marco Hernandez Pantoja','Maria Chavez','Marisela Lopez','Mayra Alvarez','Mayra Lopez','Miguel Garcia','Rogelio Galvan Virgen','Sandra Bonilla','Savannah Gabriel','Shaelie Wall','Thomas Segura','Yesenia Pacheco'];
 let DB=JSON.parse(JSON.stringify(SEED));
 
 async function initDB(){
-  // On first load: push full SEED to storage if nothing is stored yet
-  // This ensures storage is always the source of truth from the very first load
-  const existing = await window.storage.get(STORAGE_KEY, true).catch(()=>null);
-  if(!existing || !existing.value){
-    await saveDB(); // write seed → storage immediately
+  const s=document.getElementById('sync-status');
+  if(s)s.textContent='Connecting to database...';
+  // Check if Supabase has data, if not push seed up
+  const existing=await sbGet();
+  if(!existing||Object.keys(existing).length===0){
+    if(s)s.textContent='First time setup — saving data...';
+    await saveDB();
   }
   await loadShared();
   updateHeaderMonths();
   renderDashboard();
+  if(s)s.textContent='✅ Connected — real-time sync active';
+  setTimeout(()=>{if(s)s.textContent='Live · Real-time sync across all devices';},2000);
+  // Poll every 8 seconds for updates from other users
   setInterval(async()=>{
     const prev=JSON.stringify(DB);
     await loadShared();
     if(JSON.stringify(DB)!==prev){
-      const s=document.getElementById('sync-status');
-      if(s)s.textContent='↻ Updated!';
-      setTimeout(()=>{if(s)s.textContent='Live · Changes sync instantly to everyone';},2000);
+      if(s)s.textContent='↻ New data from another user!';
+      setTimeout(()=>{if(s)s.textContent='Live · Real-time sync across all devices';},3000);
       const tab=document.querySelector('.nav-btn.active');
       if(tab)tab.click();
     }
-  },12000);
+  },8000);
 }
 async function loadShared(){
   try{
-    const res=await window.storage.get(STORAGE_KEY,true);
-    if(res&&res.value){
-      const d=JSON.parse(res.value);
-      // Storage is always the source of truth — replaces DB completely for any date that exists in storage
+    const d=await sbGet();
+    if(d&&Object.keys(d).length>0){
+      // Supabase is always the source of truth
       for(const m of Object.keys(d)){
         if(!DB[m])DB[m]={};
         for(const dt of Object.keys(d[m])){
@@ -530,21 +555,18 @@ async function loadShared(){
           DB[m][dt]=d[m][dt];
         }
       }
-      window._storageLoaded=true;
-    } else {
-      // First time ever — push seed to storage so all future edits persist correctly
-      if(!window._storageInitialized){
-        window._storageInitialized=true;
-        await saveDB();
-      }
     }
   }catch(e){}
 }
 async function saveDB(){
   for(const m of Object.keys(DB))for(const dt of Object.keys(DB[m])){if(isSat(dt))delete DB[m][dt];}
-  try{await window.storage.set(STORAGE_KEY,JSON.stringify(DB),true);const s=document.getElementById('sync-status');if(s){s.textContent='✓ Saved & synced';setTimeout(()=>{s.textContent='Live · Changes sync instantly to everyone';},2000);}}catch(e){}
+  try{
+    await sbSet(DB);
+    const s=document.getElementById('sync-status');
+    if(s){s.textContent='✓ Saved & synced to all users';setTimeout(()=>{s.textContent='Live · Real-time sync across all devices';},2000);}
+  }catch(e){}
 }
-async function forceSync(){const s=document.getElementById('sync-status');if(s)s.textContent='Syncing...';await loadShared();const tab=document.querySelector('.nav-btn.active');if(tab)tab.click();if(s)s.textContent='Live · Changes sync instantly to everyone';}
+async function forceSync(){const s=document.getElementById('sync-status');if(s)s.textContent='Syncing...';await loadShared();const tab=document.querySelector('.nav-btn.active');if(tab)tab.click();if(s)s.textContent='Live · Real-time sync across all devices';}
 
 function MONTHS(){return Object.keys(DB).sort((a,b)=>{const[ma,ya]=a.split(' ');const[mb,yb]=b.split(' ');const mi=['January','February','March','April','May','June','July','August','September','October','November','December'];return(Number(ya)-Number(yb))||mi.indexOf(ma)-mi.indexOf(mb);});}
 function getDateKeys(m){return Object.keys(DB[m]||{}).filter(d=>!isSat(d)).sort((a,b)=>{const p=s=>s.split('.').map(Number);const[ma,da]=p(a);const[mb,db]=p(b);return ma-mb||da-db;});}
