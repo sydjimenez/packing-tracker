@@ -94,6 +94,7 @@ input[type=file]{display:none}
   <div class="sync-bar">
     <span class="ld"></span>
     <span id="sync-status">Live · Real-time sync across all devices</span>
+    <span style="cursor:pointer;color:#F5C98A;font-weight:600;margin-left:14px" onclick="undoLast()" title="Ctrl+Z">↩️ Undo</span>
     <span style="margin-left:auto;cursor:pointer;color:#F5C98A;font-weight:600" onclick="forceSync()">↻ Refresh</span>
   </div>
   <div class="nav">
@@ -102,12 +103,14 @@ input[type=file]{display:none}
     <button class="nav-btn" onclick="showTab('summary')">📋 Summary</button>
     <button class="nav-btn" onclick="showTab('quick')">⚡ Quick Add</button>
     <button class="nav-btn" onclick="showTab('import')">📥 Import XLSX</button>
+    <button class="nav-btn" onclick="showTab('personal')">👤 Personal View</button>
   </div>
   <div id="tab-dashboard"></div>
   <div id="tab-daily" style="display:none"></div>
   <div id="tab-summary" style="display:none"></div>
   <div id="tab-quick" style="display:none"></div>
   <div id="tab-import" style="display:none"></div>
+  <div id="tab-personal" style="display:none"></div>
 </div>
 </div>
 
@@ -514,6 +517,43 @@ async function sbSet(data){
 const ASSOCIATES=['Alex Nava','Amie Montani','Blendon Holtzer','Brandon Martell','Christian Suanes','Cristina Roman','Darren Ferguson','Denissol Padilla','Elizabeth Almazan Martinez','Elvira Rodriguez','Guillermo Gracian','Jacquelin Acosta','Keilani Sossamon','Khi Crawford','Lisardo Araqui','Mai Guerrero','Marco Hernandez Pantoja','Maria Chavez','Marisela Lopez','Mayra Alvarez','Mayra Lopez','Miguel Garcia','Rogelio Galvan Virgen','Sandra Bonilla','Savannah Gabriel','Shaelie Wall','Thomas Segura','Yesenia Pacheco'];
 let DB=JSON.parse(JSON.stringify(SEED));
 
+// ── UI STATE PERSISTENCE (remembers tab + month/date across refresh, per-browser) ──
+const UI_STATE_KEY='packingTrackerUIState_v1';
+function loadUIState(){
+  try{
+    const raw=sessionStorage.getItem(UI_STATE_KEY);
+    return raw?JSON.parse(raw):{};
+  }catch(e){return{};}
+}
+function saveUIState(patch){
+  try{
+    const cur=loadUIState();
+    const merged=Object.assign(cur,patch);
+    sessionStorage.setItem(UI_STATE_KEY,JSON.stringify(merged));
+  }catch(e){}
+}
+
+// ── UNDO STACK (Ctrl+Z) ──
+const UNDO_STACK=[];
+const MAX_UNDO=25;
+async function undoLast(){
+  if(!UNDO_STACK.length){toast('Nothing to undo');return;}
+  const prevState=UNDO_STACK.pop();
+  DB=JSON.parse(prevState);
+  LAST_SAVED_SNAPSHOT=JSON.stringify(DB);
+  try{await sbSet(DB);}catch(e){}
+  toast('↩️ Undid last change');
+  const tab=document.querySelector('.nav-btn.active');
+  if(tab)tab.click();
+}
+document.addEventListener('keydown',function(e){
+  const isUndo=(e.ctrlKey||e.metaKey)&&!e.shiftKey&&(e.key==='z'||e.key==='Z');
+  if(isUndo){
+    e.preventDefault();
+    undoLast();
+  }
+});
+
 async function initDB(){
   const s=document.getElementById('sync-status');
   if(s)s.textContent='Connecting to database...';
@@ -521,11 +561,25 @@ async function initDB(){
   const existing=await sbGet();
   if(!existing||Object.keys(existing).length===0){
     if(s)s.textContent='First time setup — saving data...';
-    await saveDB();
+    await saveDB(true);
   }
   await loadShared();
+  LAST_SAVED_SNAPSHOT=JSON.stringify(DB);
   updateHeaderMonths();
-  renderDashboard();
+
+  // Restore last viewed tab/month/date instead of always opening Dashboard
+  const ui=loadUIState();
+  const validTabs=['dashboard','daily','summary','quick','import','personal'];
+  const restoreTab=validTabs.includes(ui.activeTab)?ui.activeTab:'dashboard';
+  if(ui.dailyMonth)DS.month=ui.dailyMonth;
+  if(ui.dailyDate)DS.date=ui.dailyDate;
+  if(ui.dailySection)DS.section=ui.dailySection;
+  if(ui.summaryMonth)SS.month=ui.summaryMonth;
+  if(ui.summarySection)SS.section=ui.summarySection;
+  if(ui.personalName)PS.name=ui.personalName;
+  if(ui.personalMonth)PS.month=ui.personalMonth;
+  showTab(restoreTab);
+
   if(s)s.textContent='✅ Connected — real-time sync active';
   setTimeout(()=>{if(s)s.textContent='Live · Real-time sync across all devices';},2000);
   // Poll every 8 seconds for updates from other users
@@ -558,8 +612,14 @@ async function loadShared(){
     }
   }catch(e){}
 }
-async function saveDB(){
+let LAST_SAVED_SNAPSHOT=null;
+async function saveDB(skipUndo){
   for(const m of Object.keys(DB))for(const dt of Object.keys(DB[m])){if(isSat(dt))delete DB[m][dt];}
+  if(!skipUndo&&LAST_SAVED_SNAPSHOT){
+    UNDO_STACK.push(LAST_SAVED_SNAPSHOT);
+    if(UNDO_STACK.length>MAX_UNDO)UNDO_STACK.shift();
+  }
+  LAST_SAVED_SNAPSHOT=JSON.stringify(DB);
   try{
     await sbSet(DB);
     const s=document.getElementById('sync-status');
@@ -576,7 +636,7 @@ function updateHeaderMonths(){const el=document.getElementById('header-months');
 function openMonthModal(){document.getElementById('month-modal').style.display='flex';document.getElementById('month-list').innerHTML=MONTHS().map(m=>`<span style="background:#FDF0E0;border:1px solid #E8D5BC;border-radius:20px;padding:3px 9px;font-size:11px;font-weight:600;color:#5C2D0A">📅 ${m}</span>`).join('');}
 function closeMonthModal(){document.getElementById('month-modal').style.display='none';}
 function confirmAddMonth(){const mon=document.getElementById('new-month-sel').value,yr=document.getElementById('new-year-sel').value,info=document.getElementById('month-modal-info');if(!mon){info.textContent='⚠️ Select a month.';info.style.color='#dc2626';return;}const label=`${mon} ${yr}`;if(DB[label]){info.textContent='⚠️ Already exists.';info.style.color='#dc2626';return;}DB[label]=genMonth(label);saveDB();updateHeaderMonths();openMonthModal();info.textContent=`✅ ${label} added!`;info.style.color='#16a34a';}
-function showTab(name){document.querySelectorAll('.nav-btn').forEach((b,i)=>{b.classList.toggle('active',['dashboard','daily','summary','quick','import'][i]===name);});['dashboard','daily','summary','quick','import'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'':'none';});({dashboard:renderDashboard,daily:renderDaily,summary:renderSummary,quick:renderQuick,import:renderImport})[name]();}
+function showTab(name){document.querySelectorAll('.nav-btn').forEach((b,i)=>{b.classList.toggle('active',['dashboard','daily','summary','quick','import','personal'][i]===name);});['dashboard','daily','summary','quick','import','personal'].forEach(t=>{document.getElementById('tab-'+t).style.display=t===name?'':'none';});({dashboard:renderDashboard,daily:renderDaily,summary:renderSummary,quick:renderQuick,import:renderImport,personal:renderPersonal})[name]();saveUIState({activeTab:name});}
 
 function renderDashboard(){
   const el=document.getElementById('tab-dashboard');if(!el)return;
@@ -593,9 +653,10 @@ let DS={month:(MONTHS()[1]||MONTHS()[0]),date:'',section:'midDay'};
 function renderDaily(){
   const el=document.getElementById('tab-daily');if(!el)return;
   const dates=getDateKeys(DS.month);if(!DS.date||!dates.includes(DS.date))DS.date=dates[dates.length-1]||'';
+  saveUIState({dailyMonth:DS.month,dailyDate:DS.date,dailySection:DS.section});
   if(!DB[DS.month][DS.date])DB[DS.month][DS.date]={midDay:[],fullDay:[],dayNote:''};
   const day=DB[DS.month][DS.date],rows=day[DS.section]||[],sec=DS.section;
-  el.innerHTML=`<div class="card"><div class="controls"><select onchange="DS.month=this.value;DS.date='';renderDaily()">${MONTHS().map(m=>`<option ${m===DS.month?'selected':''}>${m}</option>`).join('')}</select><select onchange="DS.date=this.value;renderDaily()">${dates.map(d=>`<option ${d===DS.date?'selected':''}>${d}</option>`).join('')}</select><div class="seg"><button class="seg-btn ${sec==='midDay'?'active':''}" onclick="DS.section='midDay';renderDaily()">Mid-Day (4hrs)</button><button class="seg-btn ${sec==='fullDay'?'active':''}" onclick="DS.section='fullDay';renderDaily()">Full Day (8hrs)</button></div></div>
+  el.innerHTML=`<div class="card"><div class="controls"><select onchange="DS.month=this.value;DS.date='';renderDaily();saveUIState({dailyMonth:DS.month,dailyDate:DS.date})">${MONTHS().map(m=>`<option ${m===DS.month?'selected':''}>${m}</option>`).join('')}</select><select onchange="DS.date=this.value;renderDaily();saveUIState({dailyDate:DS.date})">${dates.map(d=>`<option ${d===DS.date?'selected':''}>${d}</option>`).join('')}</select><div class="seg"><button class="seg-btn ${sec==='midDay'?'active':''}" onclick="DS.section='midDay';renderDaily();saveUIState({dailySection:'midDay'})">Mid-Day (4hrs)</button><button class="seg-btn ${sec==='fullDay'?'active':''}" onclick="DS.section='fullDay';renderDaily();saveUIState({dailySection:'fullDay'})">Full Day (8hrs)</button></div></div>
   <div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#F1A983"></div>${sec==='midDay'?'≤66':'≤130'} Below</div><div class="legend-item"><div class="legend-dot" style="background:#FFFF00"></div>${sec==='midDay'?'67–72':'131–145'} Near</div><div class="legend-item"><div class="legend-dot" style="background:#B8DBAB"></div>${sec==='midDay'?'≥73':'≥146'} Target</div></div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:7px"><span class="badge badge-blue">${rows.length} records · ${DS.date}</span><div style="display:flex;gap:5px"><button class="btn-success" onclick="addRow()">+ Add Row</button>${rows.length?`<button class="btn-danger" style="padding:5px 10px" onclick="clearSection()">Clear All</button>`:''}</div></div>
   <div style="margin-bottom:10px;background:#FDF5EC;border:1.5px solid #E8D5BC;border-radius:8px;padding:9px 11px"><label style="font-size:10px;font-weight:700;color:#7B4A1E;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">📝 Day Note</label><textarea rows="2" placeholder="Add a note..." style="width:100%;font-size:12px;border:1.5px solid #E8D5BC;border-radius:6px;padding:6px 8px;resize:vertical;font-family:inherit;color:#3D1C02" onblur="saveDayNote(this.value)">${day.dayNote||''}</textarea></div>
@@ -613,6 +674,7 @@ function clearSection(){if(!confirm('Clear all rows?'))return;DB[DS.month][DS.da
 let SS={month:MONTHS()[0],section:'midDay'};
 function renderSummary(){
   const el=document.getElementById('tab-summary');if(!el)return;
+  saveUIState({summaryMonth:SS.month,summarySection:SS.section});
   const dates=getDateKeys(SS.month),sec=SS.section,aM={};
   for(const d of dates){for(const row of(DB[SS.month][d]||{})[sec]||[]){if(!row.name||!row.transactions)continue;if(!aM[row.name])aM[row.name]={};aM[row.name][d]=(aM[row.name][d]||0)+row.transactions;}}
   const names=Object.keys(aM).sort();
@@ -620,6 +682,66 @@ function renderSummary(){
   let tRows='';
   names.forEach((name,ni)=>{const s=ni%2===0?'background:#FDFAF5':'background:#FDF5EC';const avg=gA(name);const as=avg?cfStyle(Math.round(avg),sec):'';tRows+=`<tr><td style="${s};font-weight:600;font-size:11px;color:#3D1C02">${name}</td><td style="${s};${as};text-align:center;font-size:11px">${avg?avg.toFixed(1):''}</td>${dates.map((d,di)=>{const v=aM[name]?.[d];const vs=v?cfStyle(v,sec):'';return`<td style="${s};${vs};${di>0?'border-left:1px solid #E8D5BC':''};text-align:center;font-size:11px">${v||''}</td>`;}).join('')}</tr>`;});
   el.innerHTML=`<div class="card"><div class="controls"><select onchange="SS.month=this.value;renderSummary()">${MONTHS().map(m=>`<option ${m===SS.month?'selected':''}>${m}</option>`).join('')}</select><div class="seg"><button class="seg-btn ${sec==='midDay'?'active':''}" onclick="SS.section='midDay';renderSummary()">Mid-Day (4hrs)</button><button class="seg-btn ${sec==='fullDay'?'active':''}" onclick="SS.section='fullDay';renderSummary()">Full Day (8hrs)</button></div></div><div class="legend"><div class="legend-item"><div class="legend-dot" style="background:#F1A983"></div>${sec==='midDay'?'≤66':'≤130'} Below</div><div class="legend-item"><div class="legend-dot" style="background:#FFFF00"></div>${sec==='midDay'?'67–72':'131–145'} Near</div><div class="legend-item"><div class="legend-dot" style="background:#B8DBAB"></div>${sec==='midDay'?'≥73':'≥146'} Target</div></div>${names.length===0?`<div class="empty-state">No data yet.</div>`:`<div class="summary-wrap"><table><thead><tr><th style="position:sticky;left:0;background:#FDE8C8;color:#5C2D0A;z-index:3;min-width:145px">Associate</th><th style="position:sticky;left:145px;background:#F5D5A0;color:#5C2D0A;z-index:3;text-align:center;min-width:46px">Avg</th>${dates.map((d,di)=>`<th style="text-align:center;${di>0?'border-left:1px solid #E8D5BC':''}">${d.replace(/\.26$/,'')}</th>`).join('')}</tr></thead><tbody>${tRows}</tbody></table></div>`}</div>`;
+}
+
+// ── PERSONAL VIEW (1-on-1) — shows only one associate's data across all months ──
+let PS={name:'',month:'all'};
+function renderPersonal(){
+  const el=document.getElementById('tab-personal');if(!el)return;
+  saveUIState({personalName:PS.name,personalMonth:PS.month});
+  const monthOptions=['all',...MONTHS()];
+  const nameSelect=`<select onchange="PS.name=this.value;renderPersonal()" style="min-width:200px"><option value="">-- Select Associate --</option>${ASSOCIATES.map(a=>`<option value="${a}" ${a===PS.name?'selected':''}>${a}</option>`).join('')}</select>`;
+  const monthSelect=`<select onchange="PS.month=this.value;renderPersonal()"><option value="all" ${PS.month==='all'?'selected':''}>All Months</option>${MONTHS().map(m=>`<option ${m===PS.month?'selected':''}>${m}</option>`).join('')}</select>`;
+
+  if(!PS.name){
+    el.innerHTML=`<div class="card"><div class="card-title">👤 Personal View — 1-on-1 Prep</div>
+    <div class="info-box info-brown">🔒 Select an associate below to see only their data — perfect to pull up during a 1-on-1 without showing everyone else's numbers.</div>
+    <div class="controls">${nameSelect}${monthSelect}</div>
+    <div class="empty-state">Select an associate to view their personal performance.</div></div>`;
+    return;
+  }
+
+  const monthsToShow=PS.month==='all'?MONTHS():[PS.month];
+  let sectionsHTML='';
+  let overallMid=[],overallFull=[];
+
+  monthsToShow.forEach(month=>{
+    const dates=getDateKeys(month);
+    const midRows=[],fullRows=[];
+    dates.forEach(d=>{
+      const day=DB[month][d]||{midDay:[],fullDay:[]};
+      (day.midDay||[]).forEach(r=>{if(r.name===PS.name&&r.transactions>0){midRows.push({date:d,val:r.transactions});overallMid.push(r.transactions);}});
+      (day.fullDay||[]).forEach(r=>{if(r.name===PS.name&&r.transactions>0){fullRows.push({date:d,val:r.transactions});overallFull.push(r.transactions);}});
+    });
+    if(!midRows.length&&!fullRows.length)return;
+    const mkTable=(rows,sec,label)=>{
+      if(!rows.length)return`<div style="font-size:11px;color:#C4A882;margin-bottom:10px">No ${label} data for ${month}</div>`;
+      const avg=rows.reduce((a,b)=>a+b.val,0)/rows.length;
+      return`<div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:#5C2D0A;margin-bottom:6px;display:flex;align-items:center;gap:8px">${label} <span class="badge" style="${cfStyle(Math.round(avg),sec)}">Avg: ${avg.toFixed(1)}</span></div>
+        <div class="scroll-x"><table><thead><tr>${rows.map(r=>`<th style="text-align:center">${r.date.replace(/\.26$/,'')}</th>`).join('')}</tr></thead><tbody><tr>${rows.map(r=>`<td style="${cfStyle(r.val,sec)};text-align:center;border-radius:4px;font-weight:600">${r.val}</td>`).join('')}</tr></tbody></table></div>
+      </div>`;
+    };
+    sectionsHTML+=`<div class="card" style="margin-bottom:12px"><div class="card-title">📅 ${month}</div>
+      ${mkTable(midRows,'midDay','Mid-Day (4hrs)')}
+      ${mkTable(fullRows,'fullDay','Full Day (8hrs)')}
+    </div>`;
+  });
+
+  const overallMidAvg=overallMid.length?overallMid.reduce((a,b)=>a+b,0)/overallMid.length:null;
+  const overallFullAvg=overallFull.length?overallFull.reduce((a,b)=>a+b,0)/overallFull.length:null;
+
+  el.innerHTML=`<div class="card"><div class="card-title">👤 Personal View — 1-on-1 Prep</div>
+  <div class="info-box info-brown">🔒 Only ${PS.name}'s data is shown below — safe to display during a 1-on-1.</div>
+  <div class="controls">${nameSelect}${monthSelect}<button class="btn-gray" onclick="PS.name='';renderPersonal()">✕ Clear</button></div>
+  <div class="summary-grid">
+    <div class="stat-card"><div class="val" style="${overallMidAvg?cfStyle(Math.round(overallMidAvg),'midDay'):''};background:none;-webkit-text-fill-color:initial;color:#7B4A1E">${overallMidAvg?overallMidAvg.toFixed(1):'—'}</div><div class="lbl">Mid-Day Overall Avg</div></div>
+    <div class="stat-card"><div class="val" style="${overallFullAvg?cfStyle(Math.round(overallFullAvg),'fullDay'):''};background:none;-webkit-text-fill-color:initial;color:#7B4A1E">${overallFullAvg?overallFullAvg.toFixed(1):'—'}</div><div class="lbl">Full Day Overall Avg</div></div>
+    <div class="stat-card"><div class="val">${overallMid.length}</div><div class="lbl">Mid-Day Days Worked</div></div>
+    <div class="stat-card"><div class="val">${overallFull.length}</div><div class="lbl">Full Day Days Worked</div></div>
+  </div>
+  </div>
+  ${sectionsHTML||'<div class="card"><div class="empty-state">No data found for this associate yet.</div></div>'}`;
 }
 
 let QS={month:(MONTHS()[1]||MONTHS()[0]),date:'',section:'midDay',rows:[{name:'',empId:'',time:'',transactions:'',note:''}]};
